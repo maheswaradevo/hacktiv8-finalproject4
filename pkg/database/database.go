@@ -24,6 +24,6 @@ func GetDatabase() *sql.DB {
 	if err = db.Ping(); err != nil {
 		log.Fatalf("ERROR GetDatabase db ping fatal error: %v", err)
 	}
-	log.Printf("INFO GetDatabase database connectionn: established successfully with %s\n", dataSourceName)
+	log.Printf("INFO GetDatabase database connectionn: established successfully\n")
 	return db
 }
