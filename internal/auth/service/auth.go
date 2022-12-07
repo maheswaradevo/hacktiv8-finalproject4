@@ -2,27 +2,31 @@ package service
 
 import (
 	"context"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/auth"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/global/config"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/model"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Service struct {
-	repo   auth.User
+type service struct {
+	repo   auth.UserRepository
 	logger *zap.Logger
 }
 
-func NewAuthService(repo auth.User, logger *zap.Logger) *Service {
-	return &Service{
+func NewAuthService(repo auth.UserRepository, logger *zap.Logger) *service {
+	return &service{
 		repo:   repo,
 		logger: logger,
 	}
 }
 
-func (auth *Service) Register(ctx context.Context, data *dto.UserRegisterRequest) (*dto.UserRegisterResponse, error) {
+func (auth *service) Register(ctx context.Context, data *dto.UserRegisterRequest) (*dto.UserRegisterResponse, error) {
 	userInfo := data.ToEntity()
 
 	exists, err := auth.repo.FindByEmail(ctx, userInfo.Email)
@@ -49,4 +53,45 @@ func (auth *Service) Register(ctx context.Context, data *dto.UserRegisterRequest
 	}
 	userInfo.UserID = userID
 	return dto.NewUserRegisterResponse(*userInfo), nil
+}
+
+func (auth *service) Login(ctx context.Context, data *dto.UserSignInRequest) (*dto.UserSignInResponse, error) {
+	userLogin := data.ToEntity()
+
+	userCred, errFindByEmail := auth.repo.FindByEmail(ctx, userLogin.Email)
+	if errFindByEmail != nil {
+		auth.logger.Sugar().Errorf("[Login] failed to fetch data by email, err: %v", zap.Error(errFindByEmail))
+		return nil, errFindByEmail
+	}
+	errMismatchPassword := bcrypt.CompareHashAndPassword([]byte(userCred.Password), []byte(userLogin.Password))
+	if errMismatchPassword != nil {
+		errMismatchPassword = errors.ErrMismatchedHashAndPassword
+		auth.logger.Sugar().Errorf("[Login] wrong password")
+		return nil, errMismatchPassword
+	}
+	token, errCreateAccessToken := auth.createAccessToken(userCred)
+	if errCreateAccessToken != nil {
+		auth.logger.Sugar().Errorf("[Login] failed to create access token, err: %v", zap.Error(errCreateAccessToken))
+		return nil, errCreateAccessToken
+	}
+	return dto.NewUserSignInResponse(token), nil
+}
+
+func (auth *service) createAccessToken(user *model.User) (string, error) {
+	cfg := config.GetConfig()
+
+	claims := jwt.MapClaims{
+		"authorized":  true,
+		"exp":         time.Now().Add(time.Hour * 8).Unix(),
+		"userId":      user.UserID,
+		"userRole":    user.Role,
+		"userBalance": user.Balance,
+	}
+	token := jwt.NewWithClaims(cfg.JWTSigningMethod, claims)
+	signedToken, errSignedString := token.SignedString([]byte(cfg.ApiSecretKey))
+	if errSignedString != nil {
+		auth.logger.Sugar().Errorf("failed to create new token, err: %v", zap.Error(errSignedString))
+		return "", errSignedString
+	}
+	return signedToken, nil
 }

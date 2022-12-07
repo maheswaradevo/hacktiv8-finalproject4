@@ -30,5 +30,5 @@ func InitPingModule(routerGroup *gin.RouterGroup) *gin.RouterGroup {
 func InitAuthModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
 	authRepository := authRepository.NewAuthRepository(db, logger)
 	authService := authService.NewAuthService(authRepository, logger)
-	return authHandlerPkg.NewUserHandler(routerGroup, authService)
+	return authHandlerPkg.NewUserHandler(routerGroup, authService, logger)
 }
