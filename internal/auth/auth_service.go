@@ -8,4 +8,5 @@ import (
 
 type UserService interface {
 	Register(ctx context.Context, data *dto.UserRegisterRequest) (*dto.UserRegisterResponse, error)
+	Login(ctx context.Context, data *dto.UserSignInRequest) (*dto.UserSignInResponse, error)
 }

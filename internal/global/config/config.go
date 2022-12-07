@@ -14,8 +14,8 @@ type Config struct {
 	ServerAddress string
 	WhiteListed   string
 
-	JWT_SIGNING_METHOD jwt.SigningMethod
-	API_SECRET_KEY     string
+	JWTSigningMethod jwt.SigningMethod
+	ApiSecretKey     string
 }
 type Database struct {
 	Username string
@@ -42,8 +42,8 @@ func Init() {
 	config.Database.Name = os.Getenv("DB_NAME")
 	config.WhiteListed = os.Getenv("WHITELISTED_URLS")
 
-	config.JWT_SIGNING_METHOD = jwt.SigningMethodHS256
-	config.API_SECRET_KEY = os.Getenv("SECRET_KEY")
+	config.JWTSigningMethod = jwt.SigningMethodHS256
+	config.ApiSecretKey = os.Getenv("SECRET_KEY")
 }
 
 func GetConfig() *Config {
