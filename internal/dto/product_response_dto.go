@@ -57,3 +57,23 @@ func NewViewProductsResponse(p model.Products) ViewProductsResponse {
 	}
 	return viewProductsResponse
 }
+
+type EditProductResponse struct {
+	ProductID  uint64    `json:"id"`
+	Title      string    `json:"title"`
+	Price      uint64    `json:"price"`
+	Stock      uint64    `json:"stock"`
+	CategoryID uint64    `json:"category_id"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+func NewEditProductResponse(p model.Product) *EditProductResponse {
+	return &EditProductResponse{
+		ProductID:  p.ProductID,
+		Title:      p.Title,
+		Price:      p.Price,
+		Stock:      p.Stock,
+		CategoryID: p.CategoryID,
+		UpdatedAt:  time.Now(),
+	}
+}

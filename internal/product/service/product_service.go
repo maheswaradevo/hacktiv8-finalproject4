@@ -29,6 +29,17 @@ func (p *ProductServiceImpl) CreateProduct(ctx context.Context, data *dto.Create
 		log.Printf("[CreateProduct] there's data that not through the validate process")
 		return nil, validateError
 	}
+
+	check, err := p.repo.CheckCategory(ctx, data.CategoryID)
+	if err != nil {
+		log.Printf("[CreateProduct] failed to check category with id: %v, err: %v", data.CategoryID, err)
+		return nil, err
+	}
+	if !check {
+		err = errors.ErrDataNotFound
+		log.Printf("[CreateProduct] there's no category data with id: %v", data.CategoryID)
+		return nil, err
+	}
 	productID, err := p.repo.CreateProduct(ctx, *productData)
 	if err != nil {
 		log.Printf("[CreateProduct] failed to store user data to database: %v", err)
@@ -55,4 +66,42 @@ func (p *ProductServiceImpl) ViewProduct(ctx context.Context) (dto.ViewProductsR
 		return nil, err
 	}
 	return dto.NewViewProductsResponse(res), nil
+}
+
+func (p *ProductServiceImpl) UpdateProduct(ctx context.Context, productID uint64, userID uint64, data *dto.EditProductRequest) (*dto.EditProductResponse, error) {
+	editedProduct := data.ToProductEntity()
+
+	check, err := p.repo.CheckProduct(ctx, productID)
+	if err != nil {
+		log.Printf("[UpdateProduct] failed to check product with, err: %v", err)
+		return nil, err
+	}
+	if !check {
+		err = errors.ErrDataNotFound
+		log.Printf("[UpdateProduct] Product not found, err: %v", err)
+		return nil, err
+	}
+
+	checkCategory, err := p.repo.CheckCategory(ctx, data.CategoryID)
+	if err != nil {
+		log.Printf("[CreateProduct] failed to check category with id: %v, err: %v", data.CategoryID, err)
+		return nil, err
+	}
+	if !checkCategory {
+		err = errors.ErrDataNotFound
+		log.Printf("[CreateProduct] there's no category data with id: %v", data.CategoryID)
+		return nil, err
+	}
+	
+	err = p.repo.UpdateProduct(ctx, *editedProduct, productID)
+	if err != nil {
+		log.Printf("[UpdateProduct] failed to update product, err: %v", err)
+		return nil, err
+	}
+	task, err := p.repo.GetProductByID(ctx, productID)
+	if err != nil {
+		log.Printf("[UpdateProduct] failed to get product, err: %v", err)
+		return nil, err
+	}
+	return task, nil
 }

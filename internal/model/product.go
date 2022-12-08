@@ -12,4 +12,11 @@ type Product struct {
 	UpdatedAt  time.Time `db:"updated_at"`
 }
 
+type ProductCategoryJoined struct {
+	Product    Product
+	Categories Categories
+}
+
+type ProductJoined []*ProductCategoryJoined
+
 type Products []*Product
