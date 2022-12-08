@@ -77,3 +77,13 @@ func NewEditProductResponse(p model.Product) *EditProductResponse {
 		UpdatedAt:  time.Now(),
 	}
 }
+
+type DeleteProductResponse struct {
+	Message string `json:"message"`
+}
+
+func NewDeleteProductResponse(message string) *DeleteProductResponse {
+	return &DeleteProductResponse{
+		Message: message,
+	}
+}

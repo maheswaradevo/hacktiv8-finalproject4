@@ -92,7 +92,7 @@ func (p *ProductServiceImpl) UpdateProduct(ctx context.Context, productID uint64
 		log.Printf("[CreateProduct] there's no category data with id: %v", data.CategoryID)
 		return nil, err
 	}
-	
+
 	err = p.repo.UpdateProduct(ctx, *editedProduct, productID)
 	if err != nil {
 		log.Printf("[UpdateProduct] failed to update product, err: %v", err)
@@ -104,4 +104,25 @@ func (p *ProductServiceImpl) UpdateProduct(ctx context.Context, productID uint64
 		return nil, err
 	}
 	return task, nil
+}
+
+func (p *ProductServiceImpl) DeleteProduct(ctx context.Context, productID uint64, userID uint64) (*dto.DeleteProductResponse, error) {
+	check, err := p.repo.CheckProduct(ctx, productID)
+	if err != nil {
+		log.Printf("[DeleteProduct] failed to check product with,, err: %v", err)
+		return nil, err
+	}
+	if !check {
+		err = errors.ErrDataNotFound
+		log.Printf("[DeleteProduct] no product in database")
+		return nil, err
+	}
+
+	err = p.repo.DeleteProduct(ctx, productID)
+	if err != nil {
+		log.Printf("[DeleteProduct] failed to delete product, id: %v", productID)
+		return nil, err
+	}
+	message := "Your product has been successfully deleted"
+	return dto.NewDeleteProductResponse(message), nil
 }

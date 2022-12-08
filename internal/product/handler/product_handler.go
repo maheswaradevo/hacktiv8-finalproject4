@@ -30,6 +30,7 @@ func NewProductHandler(r *gin.RouterGroup, ts product.ProductService) *gin.Route
 		productProtectedRoute.Handle(http.MethodPost, "/", delivery.createProduct)
 		productProtectedRoute.Handle(http.MethodGet, "/", delivery.viewProduct)
 		productProtectedRoute.Handle(http.MethodPut, "/:productId", delivery.updateProduct)
+		productProtectedRoute.Handle(http.MethodDelete, "/:productId", delivery.deleteProduct)
 	}
 	return productRoute
 }
@@ -90,5 +91,22 @@ func (p *ProductHandler) updateProduct(c *gin.Context) {
 		return
 	}
 	response := utils.NewSuccessResponseWriter(c.Writer, "SUCCESS", http.StatusOK, res)
+	c.JSON(http.StatusOK, response)
+}
+
+func (p *ProductHandler) deleteProduct(c *gin.Context) {
+	userData := c.MustGet("userData").(jwt.MapClaims)
+	userID := uint64(userData["userId"].(float64))
+	taskID := c.Param("productId")
+	taskIDConv, _ := strconv.ParseUint(taskID, 10, 64)
+
+	res, err := p.ts.DeleteProduct(c, taskIDConv, userID)
+	if err != nil {
+		log.Printf("[deleteProduct] failed to delete product, id: %v, err: %v", taskID, err)
+		errResponse := utils.NewErrorResponse(c.Writer, err)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+	response := utils.NewSuccessResponseWriter(c.Writer, "SUCCESS", http.StatusCreated, res)
 	c.JSON(http.StatusOK, response)
 }
