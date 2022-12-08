@@ -13,6 +13,10 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
+	UserTopupBalanceRequest struct {
+		Balance int `json:"balance"`
+	}
 )
 
 func (dto *UserRegisterRequest) ToEntity() (u *model.User) {
@@ -30,6 +34,13 @@ func (dto *UserSignInRequest) ToEntity() (u *model.User) {
 	u = &model.User{
 		Email:    dto.Email,
 		Password: dto.Password,
+	}
+	return
+}
+
+func (dto *UserTopupBalanceRequest) ToEntity() (u *model.User) {
+	u = &model.User{
+		Balance: dto.Balance,
 	}
 	return
 }

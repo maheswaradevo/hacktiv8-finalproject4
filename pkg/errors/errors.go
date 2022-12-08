@@ -20,6 +20,7 @@ var (
 	ErrEmailFormat               = errors.New("wrong email format")
 	ErrMismatchedHashAndPassword = errors.New("wrong password")
 	ErrOnlyAdmin                 = errors.New("only admin can access")
+	ErrTopupBalance              = errors.New("failed to topup balance")
 )
 
 func NewErrorData(code int, message string) dto.ErrorData {
@@ -50,4 +51,5 @@ var errorMap = map[error]dto.ErrorData{
 	ErrEmailFormat:               NewErrorData(http.StatusBadRequest, ErrEmailFormat.Error()),
 	ErrMismatchedHashAndPassword: NewErrorData(http.StatusBadRequest, ErrMismatchedHashAndPassword.Error()),
 	ErrOnlyAdmin:                 NewErrorData(http.StatusForbidden, ErrOnlyAdmin.Error()),
+	ErrTopupBalance:              NewErrorData(http.StatusBadRequest, ErrTopupBalance.Error()),
 }

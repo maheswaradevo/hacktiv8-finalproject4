@@ -18,6 +18,10 @@ type (
 	UserSignInResponse struct {
 		Token string `json:"token"`
 	}
+
+	UserTopupBalanceResponse struct {
+		Message string `json:"message"`
+	}
 )
 
 func NewUserRegisterResponse(u model.User) *UserRegisterResponse {
@@ -33,5 +37,11 @@ func NewUserRegisterResponse(u model.User) *UserRegisterResponse {
 func NewUserSignInResponse(accesstoken string) *UserSignInResponse {
 	return &UserSignInResponse{
 		Token: accesstoken,
+	}
+}
+
+func NewUserTopupBalanceResponse(message string) *UserTopupBalanceResponse {
+	return &UserTopupBalanceResponse{
+		Message: message,
 	}
 }

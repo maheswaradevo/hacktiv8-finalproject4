@@ -22,8 +22,10 @@ func NewAuthRepository(db *sql.DB, logger *zap.Logger) *authRepository {
 }
 
 var (
-	INSERT_USER   = "INSERT INTO users(full_name, email, password, role, balance) VALUES (?, ?, ?, ?, ?);"
-	FIND_BY_EMAIL = "SELECT id, email, password FROM users WHERE email = ?;"
+	INSERT_USER     = "INSERT INTO users(full_name, email, password, role, balance) VALUES (?, ?, ?, ?, ?);"
+	FIND_BY_EMAIL   = "SELECT id, email, password FROM users WHERE email = ?;"
+	FIND_USER_BY_ID = "SELECT id, email, password, role, balance FROM users WHERE id = ?;"
+	UPDATE_BALANCE  = "UPDATE users SET balance = ? WHERE id = ?;"
 )
 
 func (a authRepository) InsertUser(ctx context.Context, data model.User) (userID uint64, err error) {
@@ -53,4 +55,31 @@ func (a authRepository) FindByEmail(ctx context.Context, email string) (*model.U
 		return nil, errors.ErrInvalidResources
 	}
 	return user, nil
+}
+
+func (a authRepository) FindUserByID(ctx context.Context, userId uint64) (*model.User, error) {
+	query := FIND_USER_BY_ID
+	rows := a.db.QueryRowContext(ctx, query, userId)
+
+	user := &model.User{}
+
+	errScanData := rows.Scan(&user.UserID, &user.Email, &user.Password, &user.Role, &user.Balance)
+	if errScanData != nil && errScanData != sql.ErrNoRows {
+		a.logger.Error("[FindUserByID] failed to scan the data", zap.Error(errScanData))
+		return nil, errScanData
+	} else if errScanData == sql.ErrNoRows {
+		a.logger.Sugar().Errorf("[FindUserByID] there's no data with id: %v, err: %v", userId, zap.Error(errScanData))
+	}
+	return user, nil
+}
+
+func (a authRepository) UpdateBalance(ctx context.Context, balance int, userId uint64) (int64, error) {
+	query := UPDATE_BALANCE
+	res, errExec := a.db.ExecContext(ctx, query, balance, userId)
+	if errExec != nil {
+		a.logger.Sugar().Errorf("[UpdateBalance] failed to insert data to the database, err: %v", zap.Error(errExec))
+		return 0, errExec
+	}
+	rowsAffect, _ := res.RowsAffected()
+	return rowsAffect, nil
 }
