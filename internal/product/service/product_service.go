@@ -81,6 +81,18 @@ func (p *ProductServiceImpl) UpdateProduct(ctx context.Context, productID uint64
 		log.Printf("[UpdateProduct] Product not found, err: %v", err)
 		return nil, err
 	}
+
+	checkCategory, err := p.repo.CheckCategory(ctx, data.CategoryID)
+	if err != nil {
+		log.Printf("[CreateProduct] failed to check category with id: %v, err: %v", data.CategoryID, err)
+		return nil, err
+	}
+	if !checkCategory {
+		err = errors.ErrDataNotFound
+		log.Printf("[CreateProduct] there's no category data with id: %v", data.CategoryID)
+		return nil, err
+	}
+	
 	err = p.repo.UpdateProduct(ctx, *editedProduct, productID)
 	if err != nil {
 		log.Printf("[UpdateProduct] failed to update product, err: %v", err)
