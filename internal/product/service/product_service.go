@@ -36,3 +36,23 @@ func (p *ProductServiceImpl) CreateProduct(ctx context.Context, data *dto.Create
 	}
 	return dto.NewProductCreateResponse(*productData, productID), nil
 }
+
+func (p *ProductServiceImpl) ViewProduct(ctx context.Context) (dto.ViewProductsResponse, error) {
+	count, err := p.repo.CountProduct(ctx)
+
+	if err != nil {
+		log.Printf("[ViewProduct] failed to count the task, err: %v", err)
+		return nil, err
+	}
+	if count == 0 {
+		err = errors.ErrDataNotFound
+		log.Printf("[ViewProduct] no data exists in the database: %v", err)
+		return nil, err
+	}
+	res, err := p.repo.ViewProduct(ctx)
+	if err != nil {
+		log.Printf("[ViewProduct] failed to view the task, err: %v", err)
+		return nil, err
+	}
+	return dto.NewViewProductsResponse(res), nil
+}
