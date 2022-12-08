@@ -8,4 +8,5 @@ import (
 
 type ProductService interface {
 	CreateProduct(ctx context.Context, data *dto.CreateProductRequest, userID uint64) (res *dto.CreateProductResponse, err error)
+	ViewProduct(ctx context.Context) (dto.ViewProductsResponse, error) 
 }

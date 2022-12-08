@@ -27,6 +27,7 @@ func NewProductHandler(r *gin.RouterGroup, ts product.ProductService) *gin.Route
 	productProtectedRoute := delivery.r.Group("/products", middleware.AuthMiddleware())
 	{
 		productProtectedRoute.Handle(http.MethodPost, "/", delivery.createProduct)
+		productProtectedRoute.Handle(http.MethodGet, "/", delivery.viewProduct)
 	}
 	return productRoute
 }
@@ -50,4 +51,16 @@ func (p *ProductHandler) createProduct(c *gin.Context) {
 	}
 	response := utils.NewSuccessResponseWriter(c.Writer, "SUCCESS", http.StatusCreated, res)
 	c.JSON(http.StatusCreated, response)
+}
+
+func (p *ProductHandler) viewProduct(c *gin.Context) {
+	res, err := p.ts.ViewProduct(c)
+	if err != nil {
+		log.Printf("[viewProduct] failed to view product, err: %v", err)
+		errResponse := utils.NewErrorResponse(c.Writer, err)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+	response := utils.NewSuccessResponseWriter(c.Writer, "SUCCESS", http.StatusOK, res)
+	c.JSON(http.StatusOK, response)
 }
