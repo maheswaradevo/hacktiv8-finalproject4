@@ -84,7 +84,7 @@ func (p *ProductHandler) updateProduct(c *gin.Context) {
 
 	res, err := p.ts.UpdateProduct(c, ProductIDConv, userID, &data)
 	if err != nil {
-		log.Printf("[updateTask] failed to update task, id: %v, err: %v", ProductIDConv, err)
+		log.Printf("[UpdateProduct] failed to update product, id: %v, err: %v", ProductIDConv, err)
 		errResponse := utils.NewErrorResponse(c.Writer, err)
 		c.JSON(errResponse.Code, errResponse)
 		return
