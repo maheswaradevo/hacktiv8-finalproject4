@@ -27,6 +27,7 @@ var (
 	CHECK_PRODUCT     = "SELECT id FROM products WHERE id = ?;"
 	UPDATE_PRODUCT    = "UPDATE products SET title = ?, price = ?, stock = ?, category_id = ? WHERE id = ?;"
 	GET_PRODUCT_BY_ID = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.updated_at FROM `products` p WHERE p.id = ?;"
+	DELETE_PRODUCT    = "DELETE FROM products WHERE id = ?;"
 )
 
 func (p ProductImplRepo) CreateProduct(ctx context.Context, data model.Product) (productID uint64, err error) {
@@ -171,4 +172,21 @@ func (p ProductImplRepo) GetProductByID(ctx context.Context, productID uint64) (
 		return nil, err
 	}
 	return dto.NewEditProductResponse(product.Product), err
+}
+
+func (p ProductImplRepo) DeleteProduct(ctx context.Context, productID uint64) error {
+	query := DELETE_PRODUCT
+
+	stmt, err := p.db.PrepareContext(ctx, query)
+	if err != nil {
+		log.Printf("[DeleteTask] failed to prepare the statement, err: %v", err)
+		return err
+	}
+
+	_, err = stmt.QueryContext(ctx, productID)
+	if err != nil {
+		log.Printf("[DeleteTask] failed to delete the product, err: %v", err)
+		return err
+	}
+	return nil
 }
