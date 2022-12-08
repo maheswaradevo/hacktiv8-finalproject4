@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/auth"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/global/middleware"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/global/utils"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/constants"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
@@ -29,6 +31,10 @@ func NewUserHandler(r *gin.RouterGroup, us auth.UserService, logger *zap.Logger)
 	{
 		userRoute.Handle(http.MethodPost, "/register", delivery.register)
 		userRoute.Handle(http.MethodPost, "/login", delivery.login)
+	}
+	userProtectedRoute := delivery.r.Group("/users", middleware.AuthMiddleware())
+	{
+		userProtectedRoute.Handle(http.MethodPatch, "/topup", delivery.topupBalance)
 	}
 	return userRoute
 }
@@ -74,4 +80,27 @@ func (u *userHandler) login(c *gin.Context) {
 	}
 	loginResponse := utils.NewSuccessResponseWriter(c.Writer, constants.LoginSuccess, http.StatusOK, response)
 	c.JSON(http.StatusOK, loginResponse)
+}
+
+func (u userHandler) topupBalance(c *gin.Context) {
+	balanceRequest := &dto.UserTopupBalanceRequest{}
+	errDecodeRequest := json.NewDecoder(c.Request.Body).Decode(balanceRequest)
+	if errDecodeRequest != nil {
+		u.logger.Sugar().Errorf("[topupBalance] failed to parse json data, err: %v", errDecodeRequest)
+		errResponse := utils.NewErrorResponse(c.Writer, errors.ErrInvalidRequestBody)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+	userLoginData := c.MustGet("userData").(jwt.MapClaims)
+	userID := uint64(userLoginData["userId"].(float64))
+
+	topupBalanceResponse, errTopUpBalance := u.us.TopupBalance(c, balanceRequest, userID)
+	if errTopUpBalance != nil {
+		u.logger.Sugar().Errorf("[topupBalance] failed to top up user's balance, err: %v", errTopUpBalance)
+		errResponse := utils.NewErrorResponse(c.Writer, errTopUpBalance)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+	topUpResponse := utils.NewSuccessResponseWriter(c.Writer, constants.TopUpSuccess, http.StatusOK, topupBalanceResponse)
+	c.JSON(http.StatusOK, topUpResponse)
 }

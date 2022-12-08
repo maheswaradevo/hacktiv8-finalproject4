@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -75,6 +76,35 @@ func (auth *service) Login(ctx context.Context, data *dto.UserSignInRequest) (*d
 		return nil, errCreateAccessToken
 	}
 	return dto.NewUserSignInResponse(token), nil
+}
+
+func (auth *service) TopupBalance(ctx context.Context, data *dto.UserTopupBalanceRequest, userId uint64) (*dto.UserTopupBalanceResponse, error) {
+	userBalance := data.ToEntity()
+
+	userData, errFindUserByID := auth.repo.FindUserByID(ctx, userId)
+	if errFindUserByID != nil && errFindUserByID != errors.ErrInvalidResources {
+		auth.logger.Sugar().Errorf("[TopupBalance] failed to fetch data by id, err: %v", zap.Error(errFindUserByID))
+		return nil, errFindUserByID
+	}
+	if userData == nil {
+		errUserNotFound := errors.ErrDataNotFound
+		auth.logger.Sugar().Errorf("[TopupBalance] data user with id %v not found", userId)
+		return nil, errUserNotFound
+	}
+	newBalance := userData.Balance + userBalance.Balance
+
+	rowsAffect, errUpdateBalance := auth.repo.UpdateBalance(ctx, newBalance, userId)
+	if errUpdateBalance != nil {
+		auth.logger.Sugar().Errorf("[TopupBalance] failed to update balance, err: %v", zap.Error(errUpdateBalance))
+		return nil, errUpdateBalance
+	}
+	if rowsAffect < 0 {
+		errUpdateBalance = errors.ErrTopupBalance
+		auth.logger.Sugar().Errorf("[TopupBalance] there's no rows to be updated")
+		return nil, errUpdateBalance
+	}
+	msg := fmt.Sprintf("Your balance has been successfully updated to %v", newBalance)
+	return dto.NewUserTopupBalanceResponse(msg), nil
 }
 
 func (auth *service) createAccessToken(user *model.User) (string, error) {
