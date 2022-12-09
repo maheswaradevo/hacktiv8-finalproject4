@@ -47,8 +47,8 @@ func InitAuthModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger
 
 func InitProductModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
 	productRepository := productRepository.ProvideProductRepository(db, logger)
-	productService := productService.ProvideProductService(productRepository)
-	return productHandler.NewProductHandler(routerGroup, productService)
+	productService := productService.ProvideProductService(productRepository, logger)
+	return productHandler.NewProductHandler(routerGroup, productService, logger)
 }
 
 func InitTransactionModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
