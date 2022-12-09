@@ -7,27 +7,32 @@ import (
 
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/model"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type ProductImplRepo struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *zap.Logger
 }
 
-func ProvideProductRepository(db *sql.DB) *ProductImplRepo {
+func ProvideProductRepository(db *sql.DB, logger *zap.Logger) *ProductImplRepo {
 	return &ProductImplRepo{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
 var (
-	CREATE_PRODUCT    = "INSERT INTO `products`(category_id, title, price, stock) VALUES (?, ?, ?, ?);"
-	CHECK_CATEGORY    = "SELECT id FROM categories WHERE id = ?;"
-	VIEW_PRODUCT      = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.created_at FROM products p ORDER BY p.created_at DESC;"
-	COUNT_PRODUCT     = "SELECT COUNT(*) FROM products;"
-	CHECK_PRODUCT     = "SELECT id FROM products WHERE id = ?;"
-	UPDATE_PRODUCT    = "UPDATE products SET title = ?, price = ?, stock = ?, category_id = ? WHERE id = ?;"
-	GET_PRODUCT_BY_ID = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.updated_at FROM `products` p WHERE p.id = ?;"
-	DELETE_PRODUCT    = "DELETE FROM products WHERE id = ?;"
+	CREATE_PRODUCT     = "INSERT INTO `products`(category_id, title, price, stock) VALUES (?, ?, ?, ?);"
+	CHECK_CATEGORY     = "SELECT id FROM categories WHERE id = ?;"
+	VIEW_PRODUCT       = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.created_at FROM products p ORDER BY p.created_at DESC;"
+	COUNT_PRODUCT      = "SELECT COUNT(*) FROM products;"
+	CHECK_PRODUCT      = "SELECT id FROM products WHERE id = ?;"
+	UPDATE_PRODUCT     = "UPDATE products SET title = ?, price = ?, stock = ?, category_id = ? WHERE id = ?;"
+	GET_PRODUCT_BY_ID  = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.updated_at FROM `products` p WHERE p.id = ?;"
+	DELETE_PRODUCT     = "DELETE FROM products WHERE id = ?;"
+	FIND_PRODUCT_BY_ID = "SELECT id, title, price, stock, category_id FROM products WHERE id=?;"
 )
 
 func (p ProductImplRepo) CreateProduct(ctx context.Context, data model.Product) (productID uint64, err error) {
@@ -189,4 +194,22 @@ func (p ProductImplRepo) DeleteProduct(ctx context.Context, productID uint64) er
 		return err
 	}
 	return nil
+}
+
+func (p ProductImplRepo) FindProductByID(ctx context.Context, productID uint64) (*model.Product, error) {
+	query := FIND_PRODUCT_BY_ID
+
+	rows := p.db.QueryRowContext(ctx, query, productID)
+
+	product := &model.Product{}
+
+	errScanData := rows.Scan(&product.ProductID, &product.Title, &product.Price, &product.Stock, &product.CategoryID)
+	if errScanData != nil && errScanData != sql.ErrNoRows {
+		p.logger.Sugar().Errorf("[FindProductByID] failed to scan data", zap.Error(errScanData))
+		return nil, errScanData
+	} else if errScanData == sql.ErrNoRows {
+		p.logger.Sugar().Errorf("[FindProductByID] there's no data with id %v", productID)
+		return nil, errors.ErrInvalidResources
+	}
+	return product, nil
 }

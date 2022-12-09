@@ -15,6 +15,10 @@ import (
 	productHandler "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/handler"
 	productRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/repository"
 	productService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/service"
+
+	transactionHandler "github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction/handler"
+	transactionRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction/repository"
+	transactionService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction/service"
 )
 
 func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
@@ -24,7 +28,9 @@ func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
 
 		InitAuthModule(api, db, logger)
 
-		InitProductModule(api, db)
+		InitProductModule(api, db, logger)
+
+		InitTransactionModule(api, db, logger)
 	}
 }
 
@@ -39,8 +45,17 @@ func InitAuthModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger
 	return authHandlerPkg.NewUserHandler(routerGroup, authService, logger)
 }
 
-func InitProductModule(routerGroup *gin.RouterGroup, db *sql.DB) *gin.RouterGroup {
-	productRepository := productRepository.ProvideProductRepository(db)
+func InitProductModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
+	productRepository := productRepository.ProvideProductRepository(db, logger)
 	productService := productService.ProvideProductService(productRepository)
 	return productHandler.NewProductHandler(routerGroup, productService)
+}
+
+func InitTransactionModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
+	transactionRepository := transactionRepository.NewTransactionRepository(db, logger)
+	productRepository := productRepository.ProvideProductRepository(db, logger)
+	authRepository := authRepository.NewAuthRepository(db, logger)
+
+	transactionService := transactionService.NewTransactionService(transactionRepository, productRepository, authRepository, logger)
+	return transactionHandler.NewTransactionHandler(routerGroup, transactionService, logger)
 }
