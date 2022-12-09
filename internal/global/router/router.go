@@ -24,7 +24,7 @@ func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
 
 		InitAuthModule(api, db, logger)
 
-		InitProductModule(api, db)
+		InitProductModule(api, db, logger)
 	}
 }
 
@@ -39,8 +39,8 @@ func InitAuthModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger
 	return authHandlerPkg.NewUserHandler(routerGroup, authService, logger)
 }
 
-func InitProductModule(routerGroup *gin.RouterGroup, db *sql.DB) *gin.RouterGroup {
-	productRepository := productRepository.ProvideProductRepository(db)
-	productService := productService.ProvideProductService(productRepository)
-	return productHandler.NewProductHandler(routerGroup, productService)
+func InitProductModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
+	productRepository := productRepository.ProvideProductRepository(db, logger)
+	productService := productService.ProvideProductService(productRepository, logger)
+	return productHandler.NewProductHandler(routerGroup, productService, logger)
 }
