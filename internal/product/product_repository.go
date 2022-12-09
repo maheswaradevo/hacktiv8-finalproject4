@@ -15,5 +15,6 @@ type ProductRepository interface {
 	CheckProduct(ctx context.Context, productID uint64) (bool, error)
 	UpdateProduct(ctx context.Context, reqData model.ProductCategoryJoined, productID uint64) error
 	GetProductByID(ctx context.Context, productID uint64) (*dto.EditProductResponse, error)
-	DeleteProduct(ctx context.Context, productID uint64) error 
+	DeleteProduct(ctx context.Context, productID uint64) error
+	FindProductByID(ctx context.Context, productID uint64) (*model.Product, error)
 }

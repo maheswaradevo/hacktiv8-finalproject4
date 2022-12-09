@@ -21,6 +21,8 @@ var (
 	ErrMismatchedHashAndPassword = errors.New("wrong password")
 	ErrOnlyAdmin                 = errors.New("only admin can access")
 	ErrTopupBalance              = errors.New("failed to topup balance")
+	ErrStockNotFound             = errors.New("stock is not enough")
+	ErrBalance                   = errors.New("not enough balance on account")
 )
 
 func NewErrorData(code int, message string) dto.ErrorData {
@@ -52,4 +54,6 @@ var errorMap = map[error]dto.ErrorData{
 	ErrMismatchedHashAndPassword: NewErrorData(http.StatusBadRequest, ErrMismatchedHashAndPassword.Error()),
 	ErrOnlyAdmin:                 NewErrorData(http.StatusForbidden, ErrOnlyAdmin.Error()),
 	ErrTopupBalance:              NewErrorData(http.StatusBadRequest, ErrTopupBalance.Error()),
+	ErrStockNotFound:             NewErrorData(http.StatusBadRequest, ErrDataNotFound.Error()),
+	ErrBalance:                   NewErrorData(http.StatusBadRequest, ErrBalance.Error()),
 }
