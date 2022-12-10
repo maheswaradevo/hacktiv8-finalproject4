@@ -36,8 +36,6 @@ func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
 
 		InitCategoriesModule(api, db, logger)
 
-		InitProductModule(api, db, logger)
-
 		InitTransactionModule(api, db, logger)
 	}
 }
