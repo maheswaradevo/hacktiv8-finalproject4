@@ -3,45 +3,49 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/model"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type ProductImplRepo struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *zap.Logger
 }
 
-func ProvideProductRepository(db *sql.DB) *ProductImplRepo {
+func ProvideProductRepository(db *sql.DB, logger *zap.Logger) *ProductImplRepo {
 	return &ProductImplRepo{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
 var (
-	CREATE_PRODUCT    = "INSERT INTO `products`(category_id, title, price, stock) VALUES (?, ?, ?, ?);"
-	CHECK_CATEGORY    = "SELECT id FROM categories WHERE id = ?;"
-	VIEW_PRODUCT      = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.created_at FROM products p ORDER BY p.created_at DESC;"
-	COUNT_PRODUCT     = "SELECT COUNT(*) FROM products;"
-	CHECK_PRODUCT     = "SELECT id FROM products WHERE id = ?;"
-	UPDATE_PRODUCT    = "UPDATE products SET title = ?, price = ?, stock = ?, category_id = ? WHERE id = ?;"
-	GET_PRODUCT_BY_ID = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.updated_at FROM `products` p WHERE p.id = ?;"
-	DELETE_PRODUCT    = "DELETE FROM products WHERE id = ?;"
+	CREATE_PRODUCT     = "INSERT INTO `products`(category_id, title, price, stock) VALUES (?, ?, ?, ?);"
+	CHECK_CATEGORY     = "SELECT id FROM categories WHERE id = ?;"
+	VIEW_PRODUCT       = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.created_at FROM products p ORDER BY p.created_at DESC;"
+	COUNT_PRODUCT      = "SELECT COUNT(*) FROM products;"
+	CHECK_PRODUCT      = "SELECT id FROM products WHERE id = ?;"
+	UPDATE_PRODUCT     = "UPDATE products SET title = ?, price = ?, stock = ?, category_id = ? WHERE id = ?;"
+	GET_PRODUCT_BY_ID  = "SELECT p.id, p.title, p.price, p.stock, p.category_id, p.updated_at FROM `products` p WHERE p.id = ?;"
+	DELETE_PRODUCT     = "DELETE FROM products WHERE id = ?;"
+	FIND_PRODUCT_BY_ID = "SELECT id, title, price, stock, category_id FROM products WHERE id=?;"
 )
 
 func (p ProductImplRepo) CreateProduct(ctx context.Context, data model.Product) (productID uint64, err error) {
 	query := CREATE_PRODUCT
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[CreateProduct] failed to prepare statement: %v", err)
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[CreateProduct] failed to prepare statement: %v", zap.Error(errPrepare))
 		return
 	}
 	defer stmt.Close()
 
-	res, err := stmt.ExecContext(ctx, data.CategoryID, data.Title, data.Price, data.Stock)
-	if err != nil {
-		log.Printf("[CreateProduct] failed to insert user to the database: %v", err)
+	res, errExec := stmt.ExecContext(ctx, data.CategoryID, data.Title, data.Price, data.Stock)
+	if errExec != nil {
+		p.logger.Sugar().Errorf("[CreateProduct] failed to insert user to the database: %v", zap.Error(errExec))
 		return
 	}
 
@@ -53,15 +57,15 @@ func (p ProductImplRepo) CreateProduct(ctx context.Context, data model.Product) 
 
 func (p ProductImplRepo) CheckCategory(ctx context.Context, categoryID uint64) (bool, error) {
 	query := CHECK_CATEGORY
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[CheckCategory] failed to prepare the statement, err: %v", err)
-		return false, err
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[CheckCategory] failed to prepare the statement, err: %v", zap.Error(errPrepare))
+		return false, errPrepare
 	}
-	rows, err := stmt.QueryContext(ctx, categoryID)
-	if err != nil {
-		log.Printf("[CheckCategory] failed to query to the database, err: %v", err)
-		return false, err
+	rows, errQuery := stmt.QueryContext(ctx, categoryID)
+	if errQuery != nil {
+		p.logger.Sugar().Errorf("[CheckCategory] failed to query to the database, err: %v", zap.Error(errQuery))
+		return false, errQuery
 	}
 	for rows.Next() {
 		return true, nil
@@ -70,20 +74,20 @@ func (p ProductImplRepo) CheckCategory(ctx context.Context, categoryID uint64) (
 }
 func (p ProductImplRepo) ViewProduct(ctx context.Context) (model.Products, error) {
 	query := VIEW_PRODUCT
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[ViewTask] failed to prepare the statement, err: %v", err)
-		return nil, err
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[ViewTask] failed to prepare the statement, err: %v", zap.Error(errPrepare))
+		return nil, errPrepare
 	}
-	rows, err := stmt.QueryContext(ctx)
-	if err != nil {
-		log.Printf("[ViewTask] failed to query to the database, err: %v", err)
-		return nil, err
+	rows, errQuery := stmt.QueryContext(ctx)
+	if errQuery != nil {
+		p.logger.Sugar().Errorf("[ViewTask] failed to query to the database, err: %v", zap.Error(errQuery))
+		return nil, errQuery
 	}
 	var products model.Products
 	for rows.Next() {
 		product := model.Product{}
-		err := rows.Scan(
+		errScan := rows.Scan(
 			&product.ProductID,
 			&product.Title,
 			&product.Price,
@@ -91,9 +95,9 @@ func (p ProductImplRepo) ViewProduct(ctx context.Context) (model.Products, error
 			&product.CategoryID,
 			&product.CreatedAt,
 		)
-		if err != nil {
-			log.Printf("[ViewTask] failed to scan the data from the database, err: %v", err)
-			return nil, err
+		if errScan != nil {
+			p.logger.Sugar().Errorf("[ViewTask] failed to scan the data from the database, err: %v", zap.Error(errScan))
+			return nil, errScan
 		}
 		products = append(products, &product)
 	}
@@ -104,25 +108,25 @@ func (p ProductImplRepo) CountProduct(ctx context.Context) (int, error) {
 	query := COUNT_PRODUCT
 	rows := p.db.QueryRowContext(ctx, query)
 	var count int
-	err := rows.Scan(&count)
-	if err != nil {
-		log.Printf("[CountProduct] failed to scan the data from the database, err: %v", err)
-		return 0, err
+	errScan := rows.Scan(&count)
+	if errScan != nil {
+		p.logger.Sugar().Errorf("[CountProduct] failed to scan the data from the database, err: %v", zap.Error(errScan))
+		return 0, errScan
 	}
 	return count, nil
 }
 
 func (p ProductImplRepo) CheckProduct(ctx context.Context, productID uint64) (bool, error) {
 	query := CHECK_PRODUCT
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[CheckProduct] failed to prepare the statement, err: %v", err)
-		return false, err
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[CheckProduct] failed to prepare the statement, err: %v", zap.Error(errPrepare))
+		return false, errPrepare
 	}
-	rows, err := stmt.QueryContext(ctx, productID)
-	if err != nil {
-		log.Printf("[CheckProduct] failed to query to the database, err: %v", err)
-		return false, err
+	rows, errQuery := stmt.QueryContext(ctx, productID)
+	if errQuery != nil {
+		p.logger.Sugar().Errorf("[CheckProduct] failed to query to the database, err: %v", zap.Error(errQuery))
+		return false, errQuery
 	}
 	for rows.Next() {
 		return true, nil
@@ -133,33 +137,33 @@ func (p ProductImplRepo) CheckProduct(ctx context.Context, productID uint64) (bo
 func (p ProductImplRepo) UpdateProduct(ctx context.Context, reqData model.ProductCategoryJoined, productID uint64) error {
 	query := UPDATE_PRODUCT
 
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[UpdateProduct] failed to prepare the statement, err: %v", err)
-		return err
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[UpdateProduct] failed to prepare the statement, err: %v", zap.Error(errPrepare))
+		return errPrepare
 	}
-	_, err = stmt.ExecContext(ctx, reqData.Product.Title, reqData.Product.Price, reqData.Product.Stock, reqData.Product.CategoryID, productID)
-	if err != nil {
-		log.Printf("[UpdateProduct] failed to store data to the database, err: %v", err)
-		return err
+	_, errExec := stmt.ExecContext(ctx, reqData.Product.Title, reqData.Product.Price, reqData.Product.Stock, reqData.Product.CategoryID, productID)
+	if errExec != nil {
+		p.logger.Sugar().Errorf("[UpdateProduct] failed to store data to the database, err: %v", zap.Error(errExec))
+		return errExec
 	}
 	return nil
 }
 
 func (p ProductImplRepo) GetProductByID(ctx context.Context, productID uint64) (*dto.EditProductResponse, error) {
 	query := GET_PRODUCT_BY_ID
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[GetProductByID] failed to prepare the statement, err: %v", err)
-		return nil, err
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[GetProductByID] failed to prepare the statement, err: %v", zap.Error(errPrepare))
+		return nil, errPrepare
 	}
 	rows := stmt.QueryRowContext(ctx, productID)
-	if err != nil {
-		log.Printf("[GetProductByID] failed to query to the database, err: %v", err)
-		return nil, err
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[GetProductByID] failed to query to the database, err: %v", zap.Error(errPrepare))
+		return nil, errPrepare
 	}
 	product := model.ProductCategoryJoined{}
-	err = rows.Scan(
+	errPrepare = rows.Scan(
 		&product.Product.ProductID,
 		&product.Product.Title,
 		&product.Product.Price,
@@ -167,26 +171,44 @@ func (p ProductImplRepo) GetProductByID(ctx context.Context, productID uint64) (
 		&product.Product.CategoryID,
 		&product.Product.UpdatedAt,
 	)
-	if err != nil {
-		log.Printf("[GetTaskByID] failed to scan the data from the database, err: %v", err)
-		return nil, err
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[GetTaskByID] failed to scan the data from the database, err: %v", zap.Error(errPrepare))
+		return nil, errPrepare
 	}
-	return dto.NewEditProductResponse(product.Product), err
+	return dto.NewEditProductResponse(product.Product), errPrepare
 }
 
 func (p ProductImplRepo) DeleteProduct(ctx context.Context, productID uint64) error {
 	query := DELETE_PRODUCT
 
-	stmt, err := p.db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[DeleteTask] failed to prepare the statement, err: %v", err)
-		return err
+	stmt, errPrepare := p.db.PrepareContext(ctx, query)
+	if errPrepare != nil {
+		p.logger.Sugar().Errorf("[DeleteTask] failed to prepare the statement, err: %v", zap.Error(errPrepare))
+		return errPrepare
 	}
 
-	_, err = stmt.QueryContext(ctx, productID)
-	if err != nil {
-		log.Printf("[DeleteTask] failed to delete the product, err: %v", err)
-		return err
+	_, errQuery := stmt.QueryContext(ctx, productID)
+	if errQuery != nil {
+		p.logger.Sugar().Errorf("[DeleteTask] failed to delete the product, err: %v", zap.Error(errQuery))
+		return errQuery
 	}
 	return nil
+}
+
+func (p ProductImplRepo) FindProductByID(ctx context.Context, productID uint64) (*model.Product, error) {
+	query := FIND_PRODUCT_BY_ID
+
+	rows := p.db.QueryRowContext(ctx, query, productID)
+
+	product := &model.Product{}
+
+	errScanData := rows.Scan(&product.ProductID, &product.Title, &product.Price, &product.Stock, &product.CategoryID)
+	if errScanData != nil && errScanData != sql.ErrNoRows {
+		p.logger.Sugar().Errorf("[FindProductByID] failed to scan data", zap.Error(errScanData))
+		return nil, errScanData
+	} else if errScanData == sql.ErrNoRows {
+		p.logger.Sugar().Errorf("[FindProductByID] there's no data with id %v", productID)
+		return nil, errors.ErrInvalidResources
+	}
+	return product, nil
 }

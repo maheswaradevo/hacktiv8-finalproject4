@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -12,17 +11,20 @@ import (
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/global/utils"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/product"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type ProductHandler struct {
-	r  *gin.RouterGroup
-	ts product.ProductService
+	r      *gin.RouterGroup
+	ts     product.ProductService
+	logger *zap.Logger
 }
 
-func NewProductHandler(r *gin.RouterGroup, ts product.ProductService) *gin.RouterGroup {
+func NewProductHandler(r *gin.RouterGroup, ts product.ProductService, logger *zap.Logger) *gin.RouterGroup {
 	delivery := ProductHandler{
-		r:  r,
-		ts: ts,
+		r:      r,
+		ts:     ts,
+		logger: logger,
 	}
 	productRoute := delivery.r.Group("/products")
 	productProtectedRoute := delivery.r.Group("/products", middleware.AuthMiddleware())
@@ -37,8 +39,8 @@ func NewProductHandler(r *gin.RouterGroup, ts product.ProductService) *gin.Route
 
 func (p *ProductHandler) createProduct(c *gin.Context) {
 	var requestBody dto.CreateProductRequest
-	err := c.BindJSON(&requestBody)
-	if err != nil {
+	errDecodeRequest := c.BindJSON(&requestBody)
+	if errDecodeRequest != nil {
 		errResponse := utils.NewErrorResponse(c.Writer, errors.ErrInvalidRequestBody)
 		c.JSON(errResponse.Code, errResponse)
 		return
@@ -46,10 +48,10 @@ func (p *ProductHandler) createProduct(c *gin.Context) {
 	userData := c.MustGet("userData").(jwt.MapClaims)
 	userID := uint64(userData["userId"].(float64))
 
-	res, err := p.ts.CreateProduct(c, &requestBody, userID)
-	if err != nil {
-		log.Printf("[createProduct] failed to create user, err: %v", err)
-		errResponse := utils.NewErrorResponse(c.Writer, err)
+	res, errCreate := p.ts.CreateProduct(c, &requestBody, userID)
+	if errCreate != nil {
+		p.logger.Sugar().Errorf("[createProduct] failed to create user, err: %v", zap.Error(errCreate))
+		errResponse := utils.NewErrorResponse(c.Writer, errCreate)
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}
@@ -58,10 +60,10 @@ func (p *ProductHandler) createProduct(c *gin.Context) {
 }
 
 func (p *ProductHandler) viewProduct(c *gin.Context) {
-	res, err := p.ts.ViewProduct(c)
-	if err != nil {
-		log.Printf("[viewProduct] failed to view product, err: %v", err)
-		errResponse := utils.NewErrorResponse(c.Writer, err)
+	res, errView := p.ts.ViewProduct(c)
+	if errView != nil {
+		p.logger.Sugar().Errorf("[viewProduct] failed to view product, err: %v", zap.Error(errView))
+		errResponse := utils.NewErrorResponse(c.Writer, errView)
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}
@@ -72,8 +74,8 @@ func (p *ProductHandler) viewProduct(c *gin.Context) {
 func (p *ProductHandler) updateProduct(c *gin.Context) {
 	data := dto.EditProductRequest{}
 
-	err := c.BindJSON(&data)
-	if err != nil {
+	errDecodeRequest := c.BindJSON(&data)
+	if errDecodeRequest != nil {
 		errResponse := utils.NewErrorResponse(c.Writer, errors.ErrInvalidRequestBody)
 		c.JSON(errResponse.Code, errResponse)
 		return
@@ -83,10 +85,10 @@ func (p *ProductHandler) updateProduct(c *gin.Context) {
 	productID := c.Param("productId")
 	ProductIDConv, _ := strconv.ParseUint(productID, 10, 64)
 
-	res, err := p.ts.UpdateProduct(c, ProductIDConv, userID, &data)
-	if err != nil {
-		log.Printf("[UpdateProduct] failed to update product, id: %v, err: %v", ProductIDConv, err)
-		errResponse := utils.NewErrorResponse(c.Writer, err)
+	res, errUpdate := p.ts.UpdateProduct(c, ProductIDConv, userID, &data)
+	if errUpdate != nil {
+		p.logger.Sugar().Errorf("[UpdateProduct] failed to update product, id: %v, err: %v", ProductIDConv, zap.Error(errUpdate))
+		errResponse := utils.NewErrorResponse(c.Writer, errUpdate)
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}
@@ -100,10 +102,10 @@ func (p *ProductHandler) deleteProduct(c *gin.Context) {
 	taskID := c.Param("productId")
 	taskIDConv, _ := strconv.ParseUint(taskID, 10, 64)
 
-	res, err := p.ts.DeleteProduct(c, taskIDConv, userID)
-	if err != nil {
-		log.Printf("[deleteProduct] failed to delete product, id: %v, err: %v", taskID, err)
-		errResponse := utils.NewErrorResponse(c.Writer, err)
+	res, errDelete := p.ts.DeleteProduct(c, taskIDConv, userID)
+	if errDelete != nil {
+		p.logger.Sugar().Errorf("[deleteProduct] failed to delete product, id: %v, err: %v", taskID, zap.Error(errDelete))
+		errResponse := utils.NewErrorResponse(c.Writer, errDelete)
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}

@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Categories struct {
+type Category struct {
 	CategoryID        uint64    `db:"id"`
 	Type              string    `db:"type"`
 	SoldProductAmount uint64    `db:"sold_product_amount"`
@@ -11,10 +11,10 @@ type Categories struct {
 }
 
 type CategoriesProductJoined struct {
-	Categories Categories
+	Categories Category
 	Product    Product
 }
 
 type CategoriesJoined []*CategoriesProductJoined
 
-type AllCategories []*Categories
+type AllCategories []*Category

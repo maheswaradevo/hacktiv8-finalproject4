@@ -37,7 +37,7 @@ type CreateCategoriesResponse struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
-func (ctg CategoriesImplRepo) CreateCategories(ctx context.Context, data model.Categories) (categoryID uint64, err error) {
+func (ctg CategoriesImplRepo) CreateCategories(ctx context.Context, data model.Category) (categoryID uint64, err error) {
 	query := CREATE_CATEGORIES
 	stmt, err := ctg.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -107,7 +107,7 @@ func (ctg CategoriesImplRepo) CountCategories(ctx context.Context) (int, error) 
 	return count, nil
 }
 
-func (ctg CategoriesImplRepo) UpdateCategories(ctx context.Context, reqData model.Categories, categoryID uint64) error {
+func (ctg CategoriesImplRepo) UpdateCategories(ctx context.Context, reqData model.Category, categoryID uint64) error {
 	query := UPDATE_CATEGORIES
 
 	stmt, err := ctg.db.PrepareContext(ctx, query)

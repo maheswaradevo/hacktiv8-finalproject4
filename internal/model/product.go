@@ -13,8 +13,8 @@ type Product struct {
 }
 
 type ProductCategoryJoined struct {
-	Product    Product
-	Categories Categories
+	Product  Product
+	Category Category
 }
 
 type ProductJoined []*ProductCategoryJoined

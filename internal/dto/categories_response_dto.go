@@ -13,7 +13,7 @@ type CreateCategoriesResponse struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
-func NewCategoriesCreateResponse(ctg model.Categories, role string, categoryID uint64) *CreateCategoriesResponse {
+func NewCategoriesCreateResponse(ctg model.Category, role string, categoryID uint64) *CreateCategoriesResponse {
 	return &CreateCategoriesResponse{
 		CategoryID:        categoryID,
 		Type:              ctg.Type,
@@ -106,7 +106,7 @@ type EditCategoriesResponse struct {
 	UpdatedAt         time.Time `json:"updated_at"`
 }
 
-func NewEditCategoriesResponse(ctg model.Categories) *EditCategoriesResponse {
+func NewEditCategoriesResponse(ctg model.Category) *EditCategoriesResponse {
 	return &EditCategoriesResponse{
 		CategoryID:        ctg.CategoryID,
 		Type:              ctg.Type,
