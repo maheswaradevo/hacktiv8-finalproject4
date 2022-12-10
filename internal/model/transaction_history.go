@@ -17,4 +17,11 @@ type TransactionProductJoined struct {
 	TransactionHistory
 }
 
+type TransactionProductUserJoined struct {
+	Product
+	TransactionHistory
+	User
+}
+
 type TransactionHistories []*TransactionProductJoined
+type TransactionUsersHistories []*TransactionProductUserJoined

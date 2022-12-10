@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/auth"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/model"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/product"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/constants"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -115,6 +118,17 @@ func (tr *service) ViewMyTransaction(ctx context.Context, userID uint64) ([]dto.
 		tr.logger.Sugar().Errorf("[ViewMyTransaction] no transaction history data", zap.Error(errDataNotFound))
 		return nil, errDataNotFound
 	}
+	userInfo, errGetRole := tr.transactionRepo.FindRoleByUserID(ctx, userID)
+	if errGetRole != nil {
+		tr.logger.Sugar().Errorf("[ViewUsersTransaction] failed to find role", zap.Error(errGetRole))
+		return nil, errGetRole
+	}
+	fmt.Printf("userInfo.Role: %v\n", userInfo.Role)
+	if strings.ToLower(userInfo.Role) != constants.CustomerRole {
+		errOnlyAdmin := errors.ErrOnlyAdmin
+		tr.logger.Sugar().Errorf("[ViewUsersTransaction] only admin can acces", zap.Error(errOnlyAdmin))
+		return nil, errOnlyAdmin
+	}
 	transactions, errViewTransaction := tr.transactionRepo.ViewMyTransaction(ctx, userID)
 	if errViewTransaction != nil {
 		tr.logger.Sugar().Errorf("[ViewMyTransaction] failed to view user's transaction", zap.Error(errViewTransaction))
@@ -122,4 +136,35 @@ func (tr *service) ViewMyTransaction(ctx context.Context, userID uint64) ([]dto.
 	}
 	transactionResponse := dto.NewViewMyTransactionsResponse(transactions)
 	return transactionResponse, nil
+}
+
+func (tr *service) ViewUserTransaction(ctx context.Context, userID uint64) ([]dto.ViewUserTransactionResponse, error) {
+	countTransaction, errCount := tr.transactionRepo.CountTransaction(ctx)
+	if errCount != nil {
+		tr.logger.Sugar().Errorf("[ViewUserTransaction] failed to count the transaction", zap.Error(errCount))
+		return nil, errCount
+	}
+	if countTransaction == 0 {
+		errDataNotFound := errors.ErrDataNotFound
+		tr.logger.Sugar().Errorf("[ViewUserTransaction] no transaction history data", zap.Error(errDataNotFound))
+		return nil, errDataNotFound
+	}
+	userInfo, errGetRole := tr.transactionRepo.FindRoleByUserID(ctx, userID)
+	if errGetRole != nil {
+		tr.logger.Sugar().Errorf("[ViewUsersTransaction] failed to find role", zap.Error(errGetRole))
+		return nil, errGetRole
+	}
+	fmt.Printf("userInfo.Role: %v\n", userInfo.Role)
+	if strings.ToLower(userInfo.Role) != constants.AdminRole {
+		errOnlyAdmin := errors.ErrOnlyAdmin
+		tr.logger.Sugar().Errorf("[ViewUsersTransaction] only admin can acces", zap.Error(errOnlyAdmin))
+		return nil, errOnlyAdmin
+	}
+	transactions, errViewTransaction := tr.transactionRepo.ViewUsersTransaction(ctx)
+	if errViewTransaction != nil {
+		tr.logger.Sugar().Errorf("[ViewUserTransaction] failed to view users transaction", zap.Error(errViewTransaction))
+		return nil, errViewTransaction
+	}
+	transactionUsersResponse := dto.NewViewUsersTransactionsResponse(transactions)
+	return transactionUsersResponse, nil
 }

@@ -12,4 +12,7 @@ type TransactionRepository interface {
 	InsertTransactionHistory(ctx context.Context, data model.TransactionHistory) error
 	ViewMyTransaction(ctx context.Context, userID uint64) (model.TransactionHistories, error)
 	CountMyTransaction(ctx context.Context, userID uint64) (int, error)
+	ViewUsersTransaction(ctx context.Context) (model.TransactionUsersHistories, error)
+	CountTransaction(ctx context.Context) (int, error)
+	FindRoleByUserID(ctx context.Context, userID uint64) (*model.User, error)
 }
