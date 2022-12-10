@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/auth"
@@ -123,7 +122,6 @@ func (tr *service) ViewMyTransaction(ctx context.Context, userID uint64) ([]dto.
 		tr.logger.Sugar().Errorf("[ViewUsersTransaction] failed to find role", zap.Error(errGetRole))
 		return nil, errGetRole
 	}
-	fmt.Printf("userInfo.Role: %v\n", userInfo.Role)
 	if strings.ToLower(userInfo.Role) != constants.CustomerRole {
 		errOnlyAdmin := errors.ErrOnlyAdmin
 		tr.logger.Sugar().Errorf("[ViewUsersTransaction] only admin can acces", zap.Error(errOnlyAdmin))
@@ -154,7 +152,6 @@ func (tr *service) ViewUserTransaction(ctx context.Context, userID uint64) ([]dt
 		tr.logger.Sugar().Errorf("[ViewUsersTransaction] failed to find role", zap.Error(errGetRole))
 		return nil, errGetRole
 	}
-	fmt.Printf("userInfo.Role: %v\n", userInfo.Role)
 	if strings.ToLower(userInfo.Role) != constants.AdminRole {
 		errOnlyAdmin := errors.ErrOnlyAdmin
 		tr.logger.Sugar().Errorf("[ViewUsersTransaction] only admin can acces", zap.Error(errOnlyAdmin))
