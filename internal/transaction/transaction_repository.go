@@ -14,4 +14,5 @@ type TransactionRepository interface {
 	CountMyTransaction(ctx context.Context, userID uint64) (int, error)
 	ViewUsersTransaction(ctx context.Context) (model.TransactionUsersHistories, error)
 	CountTransaction(ctx context.Context) (int, error)
+	FindRoleByUserID(ctx context.Context, userID uint64) (*model.User, error)
 }

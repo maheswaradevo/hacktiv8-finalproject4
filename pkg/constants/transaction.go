@@ -5,6 +5,6 @@ const (
 	ViewMyTransaction    = "View My Transaction Success"
 	ViewUsersTransaction = "View Users Transaction Success"
 
-	CustomerRole = "Customer"
-	AdminRole    = "Admin"
+	CustomerRole = "customer"
+	AdminRole    = "admin"
 )

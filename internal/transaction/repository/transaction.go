@@ -31,6 +31,7 @@ var (
 	COUNT_MY_TRANSACTION       = "SELECT COUNT(*) FROM transaction_histories th WHERE user_id  = ?;"
 	VIEW_USER_TRANSACTION      = "SELECT th.id, th.product_id, th.user_id, th.quantity, th.total_price, p.id, p.title, p.price, p.stock, p.category_id, p.created_at, p.updated_at, u.id, u.full_name, u.email, u.balance, u.created_at, u.updated_at FROM transaction_histories th INNER JOIN products p ON th.product_id = p.id INNER JOIN users u ON th.user_id = u.id  ORDER BY th.id ASC;"
 	COUNT_TRANSACTION          = "SELECT COUNT(*) FROM transaction_histories th;"
+	FIND_USER_BY_ROLE          = "SELECT full_name, role FROM users WHERE id=?;"
 )
 
 func (tr transactionRepository) FindCategoryByID(ctx context.Context, categoryId uint64) (*model.Category, error) {
@@ -212,4 +213,24 @@ func (tr transactionRepository) CountTransaction(ctx context.Context) (int, erro
 		}
 	}
 	return countTransaction, nil
+}
+
+func (tr transactionRepository) FindRoleByUserID(ctx context.Context, userID uint64) (*model.User, error) {
+	query := FIND_USER_BY_ROLE
+
+	rows, errQuery := tr.db.QueryContext(ctx, query, userID)
+	if errQuery != nil {
+		tr.logger.Sugar().Errorf("[FindRoleByUserID] failed to query to the database", zap.Error(errQuery))
+		return nil, errQuery
+	}
+
+	userInfo := &model.User{}
+	for rows.Next() {
+		errScan := rows.Scan(&userInfo.FullName, &userInfo.Role)
+		if errScan != nil {
+			tr.logger.Sugar().Errorf("[FindRoleByUserID] failed to scan the data", zap.Error(errScan))
+			return nil, errScan
+		}
+	}
+	return userInfo, nil
 }
