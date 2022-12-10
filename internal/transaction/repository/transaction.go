@@ -27,6 +27,8 @@ var (
 	UPDATE_BALANCE             = "UPDATE users SET balance = ? WHERE id = ?;"
 	UPDATE_SOLD_PRODUCT        = "UPDATE categories SET sold_product_amount=? WHERE id=?;"
 	INSERT_TRANSACTION_HISTORY = "INSERT INTO transaction_histories(product_id, user_id, quantity, total_price) VALUES (?, ?, ?, ?)"
+	VIEW_MY_TRANSACTION        = "SELECT th.id, th.product_id, th.user_id, th.quantity, th.total_price, p.id, p.title, p.price, p.stock, p.category_id, p.created_at, p.updated_at FROM transaction_histories th INNER JOIN products p ON th.product_id = p.id WHERE th.user_id = ? ORDER BY th.id ASC;"
+	COUNT_MY_TRANSACTION       = "SELECT COUNT(*) FROM transaction_histories th WHERE user_id  = ?;"
 )
 
 func (tr transactionRepository) FindCategoryByID(ctx context.Context, categoryId uint64) (*model.Category, error) {
@@ -93,4 +95,58 @@ func (tr transactionRepository) InsertTransactionHistory(ctx context.Context, da
 		return errExec
 	}
 	return nil
+}
+
+func (tr transactionRepository) ViewMyTransaction(ctx context.Context, userID uint64) (model.TransactionHistories, error) {
+	query := VIEW_MY_TRANSACTION
+
+	rows, errQuery := tr.db.QueryContext(ctx, query, userID)
+	if errQuery != nil {
+		tr.logger.Sugar().Errorf("[ViewMyTransaction] failed to query to the database", zap.Error(errQuery))
+		return nil, errQuery
+	}
+	transactionHistories := model.TransactionHistories{}
+
+	for rows.Next() {
+		var transactionProduct model.TransactionProductJoined
+		errScan := rows.Scan(
+			&transactionProduct.TransactionHistory.TransactionID,
+			&transactionProduct.TransactionHistory.ProductID,
+			&transactionProduct.TransactionHistory.UserID,
+			&transactionProduct.TransactionHistory.Quantity,
+			&transactionProduct.TransactionHistory.TotalPrice,
+			&transactionProduct.Product.ProductID,
+			&transactionProduct.Product.Title,
+			&transactionProduct.Product.Price,
+			&transactionProduct.Product.Stock,
+			&transactionProduct.Product.CategoryID,
+			&transactionProduct.Product.CreatedAt,
+			&transactionProduct.Product.UpdatedAt,
+		)
+		if errScan != nil {
+			tr.logger.Sugar().Errorf("[ViewMyTransaction] failed to scan from the database", zap.Error(errScan))
+			return nil, errScan
+		}
+		transactionHistories = append(transactionHistories, &transactionProduct)
+	}
+	return transactionHistories, nil
+}
+
+func (tr transactionRepository) CountMyTransaction(ctx context.Context, userID uint64) (int, error) {
+	query := COUNT_MY_TRANSACTION
+
+	rows, errQuery := tr.db.Query(query, userID)
+	if errQuery != nil {
+		tr.logger.Sugar().Errorf("[CountMyTransaction] failed to query to the database", zap.Error(errQuery))
+		return 0, errQuery
+	}
+	var countTransaction int
+	for rows.Next() {
+		errScan := rows.Scan(&countTransaction)
+		if errScan != nil {
+			tr.logger.Sugar().Errorf("[CountMyTransaction] failed to scan from the database", zap.Error(errScan))
+			return 0, errScan
+		}
+	}
+	return countTransaction, nil
 }

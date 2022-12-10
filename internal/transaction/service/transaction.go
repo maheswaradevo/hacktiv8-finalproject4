@@ -103,3 +103,28 @@ func (tr *service) DoTransaction(ctx context.Context, data *dto.DoTransactionReq
 	})
 	return transactionResponse, nil
 }
+
+func (tr *service) ViewMyTransaction(ctx context.Context, userID uint64) ([]dto.ViewMyTransactionResponse, error) {
+	/*
+		1. Get data from the database
+		2. Put into struct
+		3. Transfer to dto
+	*/
+	countTransaction, errCount := tr.transactionRepo.CountMyTransaction(ctx, userID)
+	if errCount != nil {
+		tr.logger.Sugar().Errorf("[ViewMyTransaction] failed to count transaction", zap.Error(errCount))
+		return nil, errCount
+	}
+	if countTransaction < 0 {
+		errDataNotFound := errors.ErrDataNotFound
+		tr.logger.Sugar().Errorf("[ViewMyTransaction] no transaction history data", zap.Error(errDataNotFound))
+		return nil, errDataNotFound
+	}
+	transactions, errViewTransaction := tr.transactionRepo.ViewMyTransaction(ctx, userID)
+	if errViewTransaction != nil {
+		tr.logger.Sugar().Errorf("[ViewMyTransaction] failed to view user's transaction", zap.Error(errViewTransaction))
+		return nil, errViewTransaction
+	}
+	transactionResponse := dto.NewViewMyTransactionsResponse(transactions)
+	return transactionResponse, nil
+}

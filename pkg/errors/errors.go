@@ -23,6 +23,7 @@ var (
 	ErrTopupBalance              = errors.New("failed to topup balance")
 	ErrStockNotFound             = errors.New("stock is not enough")
 	ErrBalance                   = errors.New("not enough balance on account")
+	ErrOnlyCustomer              = errors.New("only customer can access")
 )
 
 func NewErrorData(code int, message string) dto.ErrorData {
@@ -56,4 +57,5 @@ var errorMap = map[error]dto.ErrorData{
 	ErrTopupBalance:              NewErrorData(http.StatusBadRequest, ErrTopupBalance.Error()),
 	ErrStockNotFound:             NewErrorData(http.StatusBadRequest, ErrDataNotFound.Error()),
 	ErrBalance:                   NewErrorData(http.StatusBadRequest, ErrBalance.Error()),
+	ErrOnlyCustomer:              NewErrorData(http.StatusUnauthorized, ErrOnlyCustomer.Error()),
 }
