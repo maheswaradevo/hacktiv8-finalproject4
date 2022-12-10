@@ -156,7 +156,7 @@ Description<br>
 This is an endpoint to see all the user's categories.
 
 Endpoint<br>
-**GET** api/v1/categories
+**GET** `api/v1/categories`
 
 Request Parameter<br>
 
@@ -198,7 +198,7 @@ Description<br>
 This is an endpoint for admin to edit all the user`s categories by categoryId.
 
 Endpoint<br>
-**PATCH** api/v1/categories/category:Id
+**PATCH** `api/v1/categories/category:Id`
 
 Request Parameter<br>
 
@@ -206,21 +206,22 @@ Request Parameter<br>
 Headers: Bearer Token
 ```
 
-````json
+```json
 {
-    "type": "string"
+  "type": "string"
 }
+```
 
 Response Parameter<br>
 
 ```json
 {
-    "id": "integer",
-    "type": "string",
-    "sold_product_amount": "integer",
-    "updated_at": "date"
+  "id": "integer",
+  "type": "string",
+  "sold_product_amount": "integer",
+  "updated_at": "date"
 }
-````
+```
 
 ### **Delete Category**
 
@@ -228,7 +229,7 @@ Description<br>
 This is an endpoint for admin to delete all the user`s categories by categoryId.
 
 Endpoint<br>
-**DELETE** api/v1/categories/category:Id
+**DELETE** `api/v1/categories/category:Id`
 
 Request Parameter<br>
 
