@@ -8,27 +8,34 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction"
+	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/constants"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/pkg/errors"
 )
 
 type CategoriesServiceImpl struct {
-	repo categories.CategoriesRepository
+	repo            categories.CategoriesRepository
+	transactionRepo transaction.TransactionRepository
 }
 
-func ProvideCategoriesService(repo categories.CategoriesRepository) *CategoriesServiceImpl {
+func ProvideCategoriesService(repo categories.CategoriesRepository, transactionRepo transaction.TransactionRepository) *CategoriesServiceImpl {
 	return &CategoriesServiceImpl{
 		repo: repo,
 	}
 }
 
-func (ctg *CategoriesServiceImpl) CreateCategories(ctx context.Context, data *dto.CreateCategoriesRequest, role string) (res *dto.CreateCategoriesResponse, err error) {
+func (ctg *CategoriesServiceImpl) CreateCategories(ctx context.Context, data *dto.CreateCategoriesRequest, userID uint64) (res *dto.CreateCategoriesResponse, err error) {
 	categoriesData := data.ToCategoriesEntity()
 
-	roleLower := strings.ToLower(role)
-	if roleLower != "admin" {
-		log.Printf("[UpdateCategory] only Admin can access")
-		err := errors.ErrOnlyAdmin
-		return nil, err
+	userInfo, errGetRole := ctg.transactionRepo.FindRoleByUserID(ctx, userID)
+	if errGetRole != nil {
+		log.Printf("[ViewUsersTransaction] failed to find role, err: %v", (errGetRole))
+		return nil, errGetRole
+	}
+	if strings.ToLower(userInfo.Role) != constants.CustomerRole {
+		errOnlyAdmin := errors.ErrOnlyAdmin
+		log.Printf("[ViewUsersTransaction] only admin can acces, err: %v", (errOnlyAdmin))
+		return nil, errOnlyAdmin
 	}
 
 	validate := validator.New()
@@ -43,7 +50,7 @@ func (ctg *CategoriesServiceImpl) CreateCategories(ctx context.Context, data *dt
 		log.Printf("[CreateCategory] failed to store user data to database: %v", err)
 		return
 	}
-	return dto.NewCategoriesCreateResponse(*categoriesData, role, categoryID), nil
+	return dto.NewCategoriesCreateResponse(*categoriesData, userID, categoryID), nil
 }
 
 func (ctg *CategoriesServiceImpl) ViewCategories(ctx context.Context) ([]dto.ViewCategoriesResponse, error) {
@@ -66,14 +73,18 @@ func (ctg *CategoriesServiceImpl) ViewCategories(ctx context.Context) ([]dto.Vie
 	return categoriesResponse, nil
 }
 
-func (ctg *CategoriesServiceImpl) UpdateCategories(ctx context.Context, categoryID uint64, role string, data *dto.EditCategoriesRequest) (*dto.EditCategoriesResponse, error) {
+func (ctg *CategoriesServiceImpl) UpdateCategories(ctx context.Context, categoryID uint64, userID uint64, data *dto.EditCategoriesRequest) (*dto.EditCategoriesResponse, error) {
 	editedCategories := data.ToCategoriesEntity()
 
-	roleLower := strings.ToLower(role)
-	if roleLower != "admin" {
-		log.Printf("[UpdateCategory] only Admin can access")
-		err := errors.ErrOnlyAdmin
-		return nil, err
+	userInfo, errGetRole := ctg.transactionRepo.FindRoleByUserID(ctx, userID)
+	if errGetRole != nil {
+		log.Printf("[ViewUsersTransaction] failed to find role, err: %v", (errGetRole))
+		return nil, errGetRole
+	}
+	if strings.ToLower(userInfo.Role) != constants.CustomerRole {
+		errOnlyAdmin := errors.ErrOnlyAdmin
+		log.Printf("[ViewUsersTransaction] only admin can acces, err: %v", (errOnlyAdmin))
+		return nil, errOnlyAdmin
 	}
 
 	check, err := ctg.repo.CheckCategories(ctx, categoryID)
@@ -99,12 +110,16 @@ func (ctg *CategoriesServiceImpl) UpdateCategories(ctx context.Context, category
 	return categories, nil
 }
 
-func (ctg *CategoriesServiceImpl) DeleteCategories(ctx context.Context, categoryID uint64, role string) (*dto.DeleteCategoriesResponse, error) {
-	roleLower := strings.ToLower(role)
-	if roleLower != "admin" {
-		log.Printf("[UpdateCategory] only Admin can access")
-		err := errors.ErrOnlyAdmin
-		return nil, err
+func (ctg *CategoriesServiceImpl) DeleteCategories(ctx context.Context, categoryID uint64, userID uint64) (*dto.DeleteCategoriesResponse, error) {
+	userInfo, errGetRole := ctg.transactionRepo.FindRoleByUserID(ctx, userID)
+	if errGetRole != nil {
+		log.Printf("[ViewUsersTransaction] failed to find role, err: %v", (errGetRole))
+		return nil, errGetRole
+	}
+	if strings.ToLower(userInfo.Role) != constants.CustomerRole {
+		errOnlyAdmin := errors.ErrOnlyAdmin
+		log.Printf("[ViewUsersTransaction] only admin can acces, err: %v", (errOnlyAdmin))
+		return nil, errOnlyAdmin
 	}
 
 	check, err := ctg.repo.CheckCategories(ctx, categoryID)

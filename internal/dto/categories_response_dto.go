@@ -13,7 +13,7 @@ type CreateCategoriesResponse struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
-func NewCategoriesCreateResponse(ctg model.Category, role string, categoryID uint64) *CreateCategoriesResponse {
+func NewCategoriesCreateResponse(ctg model.Category, userID uint64, categoryID uint64) *CreateCategoriesResponse {
 	return &CreateCategoriesResponse{
 		CategoryID:        categoryID,
 		Type:              ctg.Type,

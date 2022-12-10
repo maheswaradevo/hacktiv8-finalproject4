@@ -44,10 +44,10 @@ func (ctgh *CategoriesHandler) createCategories(c *gin.Context) {
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}
-	userData := c.MustGet("userData").(jwt.MapClaims)
-	role, _ := userData["user_role"].(string)
+	userLoginData := c.MustGet("userData").(jwt.MapClaims)
+	userID := uint64(userLoginData["userId"].(float64))
 
-	res, err := ctgh.ctg.CreateCategories(c, &requestBody, role)
+	res, err := ctgh.ctg.CreateCategories(c, &requestBody, userID)
 	if err != nil {
 		log.Printf("[createCategory] failed to create user, err: %v", err)
 		errResponse := utils.NewErrorResponse(c.Writer, err)
@@ -79,12 +79,12 @@ func (ctgh *CategoriesHandler) updateCategories(c *gin.Context) {
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}
-	userData := c.MustGet("userData").(jwt.MapClaims)
-	role, _ := userData["user_role"].(string)
+	userLoginData := c.MustGet("userData").(jwt.MapClaims)
+	userID := uint64(userLoginData["userId"].(float64))
 	categoryID := c.Param("categoryId")
 	categoryIDConv, _ := strconv.ParseUint(categoryID, 10, 64)
 
-	res, err := ctgh.ctg.UpdateCategories(c, categoryIDConv, role, &data)
+	res, err := ctgh.ctg.UpdateCategories(c, categoryIDConv, userID, &data)
 	if err != nil {
 		log.Printf("[updateTask] failed to update task, id: %v, err: %v", categoryIDConv, err)
 		errResponse := utils.NewErrorResponse(c.Writer, err)
@@ -96,12 +96,12 @@ func (ctgh *CategoriesHandler) updateCategories(c *gin.Context) {
 }
 
 func (ctgh *CategoriesHandler) deleteCategories(c *gin.Context) {
-	userData := c.MustGet("userData").(jwt.MapClaims)
-	role, _ := userData["user_role"].(string)
+	userLoginData := c.MustGet("userData").(jwt.MapClaims)
+	userID := uint64(userLoginData["userId"].(float64))
 	categoryID := c.Param("categoryId")
 	categoryIDConv, _ := strconv.ParseUint(categoryID, 10, 64)
 
-	res, err := ctgh.ctg.DeleteCategories(c, categoryIDConv, role)
+	res, err := ctgh.ctg.DeleteCategories(c, categoryIDConv, userID)
 	if err != nil {
 		log.Printf("[deleteCategory] failed to delete category, id: %v, err: %v", categoryID, err)
 		errResponse := utils.NewErrorResponse(c.Writer, err)
