@@ -15,6 +15,10 @@ import (
 	productHandler "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/handler"
 	productRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/repository"
 	productService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/service"
+
+	categoriesHandler "github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories/handler"
+	categoriesRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories/repository"
+	categoriesService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories/service"
 )
 
 func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
@@ -25,6 +29,8 @@ func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
 		InitAuthModule(api, db, logger)
 
 		InitProductModule(api, db)
+
+		InitCategoriesModule(api, db)
 	}
 }
 
@@ -43,4 +49,10 @@ func InitProductModule(routerGroup *gin.RouterGroup, db *sql.DB) *gin.RouterGrou
 	productRepository := productRepository.ProvideProductRepository(db)
 	productService := productService.ProvideProductService(productRepository)
 	return productHandler.NewProductHandler(routerGroup, productService)
+}
+
+func InitCategoriesModule(routerGroup *gin.RouterGroup, db *sql.DB) *gin.RouterGroup {
+	categoriesRepository := categoriesRepository.ProvideCategoriesRepository(db)
+	categoriesService := categoriesService.ProvideCategoriesService(categoriesRepository)
+	return categoriesHandler.NewCategoriesHandler(routerGroup, categoriesService)
 }
