@@ -259,6 +259,10 @@ Endpoint<br>
 
 Request Parameter<br>
 
+```bash
+Headers: Bearer Token
+```
+
 ```json
 {
   "title": "title",
@@ -352,6 +356,10 @@ Endpoint<br>
 
 Request Parameter<br>
 
+```bash
+Headers: Bearer Token
+```
+
 ```json
 {
   "title": "title",
@@ -396,6 +404,10 @@ Endpoint<br>
 **DELETE** `api/v1/products/:id`
 
 Request Parameter<br>
+
+```bash
+Headers: Bearer Token
+```
 
 ```json
 {
