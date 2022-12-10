@@ -9,3 +9,12 @@ type Category struct {
 	CreatedAt         time.Time `db:"created_at"`
 	UpdatedAt         time.Time `db:"updated_at"`
 }
+
+type CategoriesProductJoined struct {
+	Categories Category
+	Product    Product
+}
+
+type CategoriesJoined []*CategoriesProductJoined
+
+type AllCategories []*Category

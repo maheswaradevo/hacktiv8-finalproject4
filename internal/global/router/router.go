@@ -16,6 +16,10 @@ import (
 	productRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/repository"
 	productService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/product/service"
 
+	categoriesHandler "github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories/handler"
+	categoriesRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories/repository"
+	categoriesService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories/service"
+
 	transactionHandler "github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction/handler"
 	transactionRepository "github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction/repository"
 	transactionService "github.com/maheswaradevo/hacktiv8-finalproject4/internal/transaction/service"
@@ -27,6 +31,10 @@ func Init(router *gin.Engine, db *sql.DB, logger *zap.Logger) {
 		InitPingModule(api)
 
 		InitAuthModule(api, db, logger)
+
+		InitProductModule(api, db, logger)
+
+		InitCategoriesModule(api, db, logger)
 
 		InitProductModule(api, db, logger)
 
@@ -58,4 +66,11 @@ func InitTransactionModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap
 
 	transactionService := transactionService.NewTransactionService(transactionRepository, productRepository, authRepository, logger)
 	return transactionHandler.NewTransactionHandler(routerGroup, transactionService, logger)
+}
+
+func InitCategoriesModule(routerGroup *gin.RouterGroup, db *sql.DB, logger *zap.Logger) *gin.RouterGroup {
+	transactionRepository := transactionRepository.NewTransactionRepository(db, logger)
+	categoriesRepository := categoriesRepository.ProvideCategoriesRepository(db)
+	categoriesService := categoriesService.ProvideCategoriesService(categoriesRepository, transactionRepository)
+	return categoriesHandler.NewCategoriesHandler(routerGroup, categoriesService)
 }

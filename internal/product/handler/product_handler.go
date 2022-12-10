@@ -26,7 +26,7 @@ func NewProductHandler(r *gin.RouterGroup, ts product.ProductService, logger *za
 		ts:     ts,
 		logger: logger,
 	}
-	productRoute := delivery.r.Group("/products")
+
 	productProtectedRoute := delivery.r.Group("/products", middleware.AuthMiddleware())
 	{
 		productProtectedRoute.Handle(http.MethodPost, "/", delivery.createProduct)
@@ -34,7 +34,7 @@ func NewProductHandler(r *gin.RouterGroup, ts product.ProductService, logger *za
 		productProtectedRoute.Handle(http.MethodPut, "/:productId", delivery.updateProduct)
 		productProtectedRoute.Handle(http.MethodDelete, "/:productId", delivery.deleteProduct)
 	}
-	return productRoute
+	return productProtectedRoute
 }
 
 func (p *ProductHandler) createProduct(c *gin.Context) {
