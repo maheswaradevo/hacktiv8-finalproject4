@@ -117,6 +117,133 @@ Response Example<br>
 
 ## Category
 
+---
+
+### **Create Category**
+
+Description<br>
+This is an endpoint for admin to create a new user's category.
+
+Endpoint<br>
+**POST** api/v1/categories
+
+Request Parameter<br>
+
+```bash
+Headers: Bearer Token
+```
+
+```json
+{
+  "type": "string"
+}
+```
+
+Response Example<br>
+
+```json
+{
+  "id": "integer",
+  "type": "string",
+  "sold_product_amount": "integer",
+  "created_at": "date"
+}
+```
+
+### **View Category**
+
+Description<br>
+This is an endpoint to see all the user's categories.
+
+Endpoint<br>
+**GET** api/v1/categories
+
+Request Parameter<br>
+
+```bash
+Headers: Bearer Token
+```
+
+Response Example<br>
+
+```json
+{
+  "id": "integer",
+  "type": "string",
+  "sold_product_amount": "integer",
+  "created_at": "date",
+  "updated_at": "date",
+  "Products": [
+    {
+      "id": "integer",
+      "title": "string",
+      "price": "stock",
+      "created_at": "date",
+      "updated_at": "date"
+    },
+    {
+      "id": "integer",
+      "title": "string",
+      "price": "stock",
+      "created_at": "date",
+      "updated_at": "date"
+    }
+  ]
+}
+```
+
+### **Update Category**
+
+Description<br>
+This is an endpoint for admin to edit all the user`s categories by categoryId.
+
+Endpoint<br>
+**PATCH** api/v1/categories/category:Id
+
+Request Parameter<br>
+
+```bash
+Headers: Bearer Token
+```
+
+````json
+{
+    "type": "string"
+}
+
+Response Parameter<br>
+
+```json
+{
+    "id": "integer",
+    "type": "string",
+    "sold_product_amount": "integer",
+    "updated_at": "date"
+}
+````
+
+### **Delete Category**
+
+Description<br>
+This is an endpoint for admin to delete all the user`s categories by categoryId.
+
+Endpoint<br>
+**DELETE** api/v1/categories/category:Id
+
+Request Parameter<br>
+
+```bash
+Header: Bearer Token
+```
+
+Response Parameter<br>
+
+```json
+{
+  "message": "Category has been successfully deleted"
+}
+```
+
 ## Product
 
 ---
@@ -136,7 +263,7 @@ Request Parameter<br>
   "title": "title",
   "price": 1,
   "stock": 1,
-  "category_id": 1,
+  "category_id": 1
 }
 ```
 
@@ -144,16 +271,16 @@ Response Example<br>
 
 ```json
 {
-    "status": "SUCCESS",
-    "error": null,
-    "data": {
-        "id": 1,
-        "title": "title",
-        "price": 10000,
-        "stock": 1,
-        "category_id": 1,
-        "created_at": "2022-12-10T13:51:29.311693261Z"
-    }
+  "status": "SUCCESS",
+  "error": null,
+  "data": {
+    "id": 1,
+    "title": "title",
+    "price": 10000,
+    "stock": 1,
+    "category_id": 1,
+    "created_at": "2022-12-10T13:51:29.311693261Z"
+  }
 }
 ```
 
@@ -179,7 +306,6 @@ Request Parameter<br>
 ```bash
 Header: Bearer Token
 ```
-
 
 Response Example<br>
 
@@ -230,7 +356,7 @@ Request Parameter<br>
   "title": "title",
   "price": 1,
   "stock": 1,
-  "category_id": 1,
+  "category_id": 1
 }
 ```
 
@@ -238,16 +364,16 @@ Response Example<br>
 
 ```json
 {
-    "status": "SUCCESS",
-    "error": null,
-    "data": {
-        "id": 1,
-        "title": "title",
-        "price": 10000,
-        "stock": 1,
-        "category_id": 1,
-        "created_at": "2022-12-10T13:51:29.311693261Z"
-    }
+  "status": "SUCCESS",
+  "error": null,
+  "data": {
+    "id": 1,
+    "title": "title",
+    "price": 10000,
+    "stock": 1,
+    "category_id": 1,
+    "created_at": "2022-12-10T13:51:29.311693261Z"
+  }
 }
 ```
 
@@ -259,7 +385,6 @@ Error Response Example<br>
   "message": "data not found"
 }
 ```
-
 
 ### **Delete Product**
 
@@ -276,7 +401,7 @@ Request Parameter<br>
   "title": "title",
   "price": 1,
   "stock": 1,
-  "category_id": 1,
+  "category_id": 1
 }
 ```
 
@@ -284,11 +409,11 @@ Response Example<br>
 
 ```json
 {
-    "status": "SUCCESS",
-    "error": null,
-    "data": {
-      "message" : "Your product has been succesfully deleted"
-    }
+  "status": "SUCCESS",
+  "error": null,
+  "data": {
+    "message": "Your product has been succesfully deleted"
+  }
 }
 ```
 
@@ -300,7 +425,6 @@ Error Response Example<br>
   "message": "data not found"
 }
 ```
-
 
 ## **Transaction History**
 
