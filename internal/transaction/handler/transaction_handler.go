@@ -32,6 +32,7 @@ func NewTransactionHandler(r *gin.RouterGroup, ts transaction.TransactionService
 	{
 		transactionRoute.Handle(http.MethodPost, "", delivery.doTransaction)
 		transactionRoute.Handle(http.MethodGet, "/my-transactions", delivery.viewMyTransaction)
+		transactionRoute.Handle(http.MethodGet, "/users-transactions", delivery.viewUsersTransaction)
 	}
 	return transactionRoute
 }
@@ -82,5 +83,29 @@ func (t *transactionHandler) viewMyTransaction(c *gin.Context) {
 	}
 
 	response := utils.NewSuccessResponseWriter(c.Writer, constants.ViewMyTransaction, http.StatusOK, myTransactions)
+	c.JSON(http.StatusOK, response)
+}
+
+func (t *transactionHandler) viewUsersTransaction(c *gin.Context) {
+	userLoginData := c.MustGet("userData").(jwt.MapClaims)
+	role, _ := userLoginData["userRole"].(string)
+
+	if strings.EqualFold(constants.AdminRole, role) {
+		errAdmin := errors.ErrOnlyAdmin
+		t.logger.Sugar().Errorf("[viewUsersTransaction] only admin can access", zap.Error(errAdmin))
+		errResponse := utils.NewErrorResponse(c.Writer, errAdmin)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+
+	usersTransaction, errUsersTransaction := t.ts.ViewUserTransaction(c)
+	if errUsersTransaction != nil {
+		t.logger.Sugar().Errorf("[viewUsersTransaction] failed to view users transaction", zap.Error(errUsersTransaction))
+		errResponse := utils.NewErrorResponse(c.Writer, errUsersTransaction)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+
+	response := utils.NewSuccessResponseWriter(c.Writer, constants.ViewUsersTransaction, http.StatusOK, usersTransaction)
 	c.JSON(http.StatusOK, response)
 }

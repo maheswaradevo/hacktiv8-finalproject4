@@ -123,3 +123,23 @@ func (tr *service) ViewMyTransaction(ctx context.Context, userID uint64) ([]dto.
 	transactionResponse := dto.NewViewMyTransactionsResponse(transactions)
 	return transactionResponse, nil
 }
+
+func (tr *service) ViewUserTransaction(ctx context.Context) ([]dto.ViewUserTransactionResponse, error) {
+	countTransaction, errCount := tr.transactionRepo.CountTransaction(ctx)
+	if errCount != nil {
+		tr.logger.Sugar().Errorf("[ViewUserTransaction] failed to count the transaction", zap.Error(errCount))
+		return nil, errCount
+	}
+	if countTransaction == 0 {
+		errDataNotFound := errors.ErrDataNotFound
+		tr.logger.Sugar().Errorf("[ViewUserTransaction] no transaction history data", zap.Error(errDataNotFound))
+		return nil, errDataNotFound
+	}
+	transactions, errViewTransaction := tr.transactionRepo.ViewUsersTransaction(ctx)
+	if errViewTransaction != nil {
+		tr.logger.Sugar().Errorf("[ViewUserTransaction] failed to view users transaction", zap.Error(errViewTransaction))
+		return nil, errViewTransaction
+	}
+	transactionUsersResponse := dto.NewViewUsersTransactionsResponse(transactions)
+	return transactionUsersResponse, nil
+}
