@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/auth"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
@@ -49,7 +50,25 @@ func (u *userHandler) register(c *gin.Context) {
 		c.JSON(errResponse.Code, errResponse)
 		return
 	}
+	validate := validator.New()
+	validateError := validate.Struct(registerRequest)
+	if validateError != nil {
+		validateError = errors.ErrInvalidRequestBody
+		u.logger.Sugar().Errorf("[register] there's data that not through the validate process")
+		errResponse := utils.NewErrorResponse(c.Writer, validateError)
+		c.JSON(http.StatusBadRequest, errResponse)
+		return
+	}
 
+	isValid := utils.IsValidEmail(registerRequest.Email)
+	if !isValid {
+		errEmail := errors.ErrEmailFormat
+		u.logger.Sugar().Errorf("wrong email format")
+		errResponse := utils.NewErrorResponse(c.Writer, errEmail)
+		c.JSON(http.StatusBadRequest, errResponse)
+		return
+
+	}
 	res, err := u.us.Register(c, registerRequest)
 	if err != nil {
 		u.logger.Sugar().Errorf("[register] failed to register user, err: %v", err)

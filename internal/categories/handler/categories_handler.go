@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/categories"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/global/middleware"
@@ -24,7 +25,6 @@ func NewCategoriesHandler(r *gin.RouterGroup, ctg categories.CategoriesService) 
 		r:   r,
 		ctg: ctg,
 	}
-	categoriesRoute := delivery.r.Group("/categories")
 
 	categoriesProtectedRoute := delivery.r.Group("/categories", middleware.AuthMiddleware())
 	{
@@ -33,7 +33,7 @@ func NewCategoriesHandler(r *gin.RouterGroup, ctg categories.CategoriesService) 
 		categoriesProtectedRoute.Handle(http.MethodPatch, "/:categoryId", delivery.updateCategories)
 		categoriesProtectedRoute.Handle(http.MethodDelete, "/:categoryId", delivery.deleteCategories)
 	}
-	return categoriesRoute
+	return categoriesProtectedRoute
 }
 
 func (ctgh *CategoriesHandler) createCategories(c *gin.Context) {
@@ -47,6 +47,7 @@ func (ctgh *CategoriesHandler) createCategories(c *gin.Context) {
 	userLoginData := c.MustGet("userData").(jwt.MapClaims)
 	userID := uint64(userLoginData["userId"].(float64))
 
+	fmt.Printf("userID: %v\n", userID)
 	res, err := ctgh.ctg.CreateCategories(c, &requestBody, userID)
 	if err != nil {
 		log.Printf("[createCategory] failed to create user, err: %v", err)

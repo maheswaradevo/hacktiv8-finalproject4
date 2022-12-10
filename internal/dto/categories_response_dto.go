@@ -23,24 +23,32 @@ func NewCategoriesCreateResponse(ctg model.Category, userID uint64, categoryID u
 }
 
 type ViewCategoriesResponse struct {
-	CategoryID        uint64                        `json:"id"`
-	Type              string                        `json:"type"`
-	SoldProductAmount uint64                        `json:"sold_product_amount"`
-	CreatedAt         time.Time                     `json:"created_at"`
-	UpdatedAt         time.Time                     `json:"updated_at"`
-	Product           ViewCategoriesProductResponse `json:"product"`
+	CategoryID        uint64                          `json:"id"`
+	Type              string                          `json:"type"`
+	SoldProductAmount uint64                          `json:"sold_product_amount"`
+	CreatedAt         time.Time                       `json:"created_at"`
+	UpdatedAt         time.Time                       `json:"updated_at"`
+	Product           []ViewCategoriesProductResponse `json:"products"`
 }
 
 type ViewCategoriesProductResponse struct {
-	ProductID uint64    `db:"id"`
-	Title     string    `db:"title"`
-	Price     uint64    `db:"price"`
-	Stock     uint64    `db:"stock"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ProductID uint64    `json:"id"`
+	Title     string    `json:"title"`
+	Price     uint64    `json:"price"`
+	Stock     uint64    `json:"stock"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// type ViewAllCategoriesResponse []*ViewCategoriesResponse
+func NewProductResponse(tsk model.Product) *ViewCategoriesProductResponse {
+	return &ViewCategoriesProductResponse{
+		ProductID: tsk.ProductID,
+		Title:     tsk.Title,
+		Price:     tsk.Price,
+		Stock:     tsk.Stock,
+		CreatedAt: time.Now(),
+	}
+}
 
 func NewViewCategoryResponse(ctg model.CategoriesProductJoined) ViewCategoriesResponse {
 	var response ViewCategoriesResponse
@@ -51,13 +59,10 @@ func NewViewCategoryResponse(ctg model.CategoriesProductJoined) ViewCategoriesRe
 	response.CreatedAt = ctg.Categories.CreatedAt
 	response.UpdatedAt = ctg.Categories.UpdatedAt
 
-	response.Product.ProductID = ctg.Product.ProductID
-	response.Product.Title = ctg.Product.Title
-	response.Product.Price = ctg.Product.Price
-	response.Product.Stock = ctg.Product.Stock
-	response.Product.CreatedAt = ctg.Categories.CreatedAt
-	response.Product.UpdatedAt = ctg.Categories.UpdatedAt
-
+	for _, p := range ctg.Product {
+		product := NewProductResponse(p)
+		response.Product = append(response.Product, *product)
+	}
 	return response
 }
 
@@ -70,34 +75,6 @@ func NewViewCategoriesResponse(ctg model.CategoriesJoined) []ViewCategoriesRespo
 	}
 	return responses
 }
-
-// func NewViewCategoriesResponse(ctg model.CategoriesProductJoined) *ViewCategoriesResponse {
-// 	return &ViewCategoriesResponse{
-// 		CategoryID:        ctg.Categories.CategoryID,
-// 		Type:              ctg.Categories.Type,
-// 		SoldProductAmount: ctg.Categories.SoldProductAmount,
-// 		CreatedAt:         ctg.Categories.CreatedAt,
-// 		UpdatedAt:         ctg.Categories.UpdatedAt,
-// 		Product: ViewCategoriesProductResponse{
-// 			ProductID: ctg.Product.ProductID,
-// 			Title:     ctg.Product.Title,
-// 			Price:     ctg.Product.Price,
-// 			Stock:     ctg.Product.Stock,
-// 			CreatedAt: ctg.Product.CreatedAt,
-// 			UpdatedAt: ctg.Product.UpdatedAt,
-// 		},
-// 	}
-// }
-
-// func NewViewAllCategoriesResponse(ctg model.CategoriesJoined) *ViewAllCategoriesResponse {
-// 	var viewAllCategoriesResponse ViewAllCategoriesResponse
-
-// 	for idx := range ctg {
-// 		peopleCategories := NewViewCategoriesResponse(*ctg[idx])
-// 		viewAllCategoriesResponse = append(viewAllCategoriesResponse, peopleCategories)
-// 	}
-// 	return &viewAllCategoriesResponse
-// }
 
 type EditCategoriesResponse struct {
 	CategoryID        uint64    `json:"id"`

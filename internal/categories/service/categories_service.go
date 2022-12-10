@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -20,7 +21,8 @@ type CategoriesServiceImpl struct {
 
 func ProvideCategoriesService(repo categories.CategoriesRepository, transactionRepo transaction.TransactionRepository) *CategoriesServiceImpl {
 	return &CategoriesServiceImpl{
-		repo: repo,
+		repo:            repo,
+		transactionRepo: transactionRepo,
 	}
 }
 
@@ -29,12 +31,13 @@ func (ctg *CategoriesServiceImpl) CreateCategories(ctx context.Context, data *dt
 
 	userInfo, errGetRole := ctg.transactionRepo.FindRoleByUserID(ctx, userID)
 	if errGetRole != nil {
-		log.Printf("[ViewUsersTransaction] failed to find role, err: %v", (errGetRole))
+		log.Printf("[CreateCategories] failed to find role, err: %v", (errGetRole))
 		return nil, errGetRole
 	}
-	if strings.ToLower(userInfo.Role) != constants.CustomerRole {
+	fmt.Printf("userInfo.Role: %v\n", userInfo.Role)
+	if strings.ToLower(userInfo.Role) != constants.AdminRole {
 		errOnlyAdmin := errors.ErrOnlyAdmin
-		log.Printf("[ViewUsersTransaction] only admin can acces, err: %v", (errOnlyAdmin))
+		log.Printf("[CreateCategories] only admin can acces, err: %v", (errOnlyAdmin))
 		return nil, errOnlyAdmin
 	}
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/dto"
 	"github.com/maheswaradevo/hacktiv8-finalproject4/internal/global/middleware"
@@ -48,6 +49,16 @@ func (t *transactionHandler) doTransaction(c *gin.Context) {
 	}
 	userLoginData := c.MustGet("userData").(jwt.MapClaims)
 	userID := uint64(userLoginData["userId"].(float64))
+
+	validate := validator.New()
+	validateError := validate.Struct(transactionRequest)
+	if validateError != nil {
+		validateError = errors.ErrInvalidRequestBody
+		t.logger.Sugar().Errorf("[doTransaction] there's data that not through the validate process")
+		errResponse := utils.NewErrorResponse(c.Writer, validateError)
+		c.JSON(http.StatusBadRequest, errResponse)
+		return
+	}
 
 	transactionResponse, errTransaction := t.ts.DoTransaction(c, transactionRequest, userID)
 	if errTransaction != nil {

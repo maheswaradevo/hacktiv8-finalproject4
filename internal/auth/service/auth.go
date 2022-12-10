@@ -91,6 +91,11 @@ func (auth *service) TopupBalance(ctx context.Context, data *dto.UserTopupBalanc
 		auth.logger.Sugar().Errorf("[TopupBalance] data user with id %v not found", userId)
 		return nil, errUserNotFound
 	}
+	if userData.Balance > 100000000 {
+		errLimit := errors.ErrLimit
+		auth.logger.Sugar().Errorf("[TopupBalance] balance amount reach limit")
+		return nil, errLimit
+	}
 	newBalance := userData.Balance + userBalance.Balance
 
 	rowsAffect, errUpdateBalance := auth.repo.UpdateBalance(ctx, newBalance, userId)

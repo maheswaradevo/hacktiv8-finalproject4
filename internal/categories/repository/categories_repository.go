@@ -21,13 +21,14 @@ func ProvideCategoriesRepository(db *sql.DB) *CategoriesImplRepo {
 }
 
 var (
-	CREATE_CATEGORIES    = "INSERT INTO categories(type) VALUES (?);"
-	VIEW_CATEGORIES      = "SELECT c.id, c.type, c.sold_product_amount, c.updated_at, c.created_at, p.id, p.title, p.price, p.stock, p.created_at, p.updated_at FROM `product` p JOIN  `categories` c ON c.id = p.category_id ORDER BY c.created_at DESC;"
-	COUNT_CATEGORIES     = "SELECT COUNT(*) FROM categories;"
-	UPDATE_CATEGORIES    = "UPDATE categories SET type = ? WHERE id = ?;"
-	CHECK_CATEGORY       = "SELECT id FROM categories WHERE id = ?;"
-	DELETE_CATEGORIES    = "DELETE FROM categories WHERE id = ?;"
-	GET_CATEGORIES_BY_ID = "SELECT c.id, c.type, c.updated_at FROM categories c WHERE c.id = ?;"
+	CREATE_CATEGORIES       = "INSERT INTO categories(type, sold_product_amount) VALUES (?, 0);"
+	VIEW_CATEGORIES         = "SELECT c.id, c.type, c.sold_product_amount, c.updated_at, c.created_at FROM `categories` c ;"
+	COUNT_CATEGORIES        = "SELECT COUNT(*) FROM categories;"
+	UPDATE_CATEGORIES       = "UPDATE categories SET type = ? WHERE id = ?;"
+	CHECK_CATEGORY          = "SELECT id FROM categories WHERE id = ?;"
+	DELETE_CATEGORIES       = "DELETE FROM categories WHERE id = ?;"
+	GET_CATEGORIES_BY_ID    = "SELECT c.id, c.type, c.updated_at FROM categories c WHERE c.id = ?;"
+	GET_PRODUCT_BY_CATEGORY = "SELECT id, title, price, stock, created_at, updated_at FROM products WHERE category_id=?;"
 )
 
 type CreateCategoriesResponse struct {
@@ -41,14 +42,14 @@ func (ctg CategoriesImplRepo) CreateCategories(ctx context.Context, data model.C
 	query := CREATE_CATEGORIES
 	stmt, err := ctg.db.PrepareContext(ctx, query)
 	if err != nil {
-		log.Printf("[CreateTask] failed to prepare statement: %v", err)
+		log.Printf("[CreateCategory] failed to prepare statement: %v", err)
 		return
 	}
 	defer stmt.Close()
 
 	res, err := stmt.ExecContext(ctx, data.Type)
 	if err != nil {
-		log.Printf("[CreateComment] failed to insert user to the database: %v", err)
+		log.Printf("[CreateCategory] failed to insert user to the database: %v", err)
 		return
 	}
 
@@ -71,26 +72,48 @@ func (ctg CategoriesImplRepo) ViewCategories(ctx context.Context) (model.Categor
 		return nil, err
 	}
 	var peopleCategories model.CategoriesJoined
+
 	for rows.Next() {
-		personCategories := model.CategoriesProductJoined{}
+		personCategoriesJoined := model.CategoriesProductJoined{}
 		err := rows.Scan(
-			&personCategories.Categories.CategoryID,
-			&personCategories.Categories.Type,
-			&personCategories.Categories.SoldProductAmount,
-			&personCategories.Categories.CreatedAt,
-			&personCategories.Categories.UpdatedAt,
-			&personCategories.Product.ProductID,
-			&personCategories.Product.Title,
-			&personCategories.Product.Price,
-			&personCategories.Product.Stock,
-			&personCategories.Product.CreatedAt,
-			&personCategories.Product.UpdatedAt,
+			&personCategoriesJoined.Categories.CategoryID,
+			&personCategoriesJoined.Categories.Type,
+			&personCategoriesJoined.Categories.SoldProductAmount,
+			&personCategoriesJoined.Categories.UpdatedAt,
+			&personCategoriesJoined.Categories.CreatedAt,
 		)
 		if err != nil {
 			log.Printf("[ViewCategory] failed to scan the data from the database, err: %v", err)
 			return nil, err
 		}
-		peopleCategories = append(peopleCategories, &personCategories)
+		peopleCategories = append(peopleCategories, &personCategoriesJoined)
+	}
+
+	queryProduct := GET_PRODUCT_BY_CATEGORY
+
+	for _, product := range peopleCategories {
+		rows, err := ctg.db.QueryContext(ctx, queryProduct, product.Categories.CategoryID)
+		if err != nil {
+			log.Printf("[ViewCategory] failed to query to the database, err: %v", err)
+			return nil, err
+		}
+
+		for rows.Next() {
+			productJoined := model.Product{}
+			err := rows.Scan(
+				&productJoined.ProductID,
+				&productJoined.Title,
+				&productJoined.Price,
+				&productJoined.Stock,
+				&productJoined.CreatedAt,
+				&productJoined.UpdatedAt,
+			)
+			if err != nil {
+				log.Printf("[ViewCategory] failed to scan the data from the database, err: %v", err)
+				return nil, err
+			}
+			product.Product = append(product.Product, productJoined)
+		}
 	}
 	return peopleCategories, nil
 }
