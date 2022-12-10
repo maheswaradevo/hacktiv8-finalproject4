@@ -16,7 +16,6 @@ func GetDatabase() *sql.DB {
 	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true",
 		cfg.Database.Username, cfg.Database.Password, cfg.Database.Address, cfg.Database.Name)
 
-	fmt.Println(dataSourceName)
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		log.Fatalf("Error GetDatabase sql open connection fatal error: %v", err)
