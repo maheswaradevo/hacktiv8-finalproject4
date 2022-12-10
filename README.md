@@ -2,7 +2,7 @@
 
 ## Toko Belanja
 
-This is repository for Hacktiv8 Final Project 5 assignment. Already deployed on Railway `https://hacktiv8-finalproject4-production.up.railway.app/api/v1`
+This is repository for Hacktiv8 Final Project 4 assignment. Already deployed on Railway `https://hacktiv8-finalproject4-production.up.railway.app/api/v1`
 
 ## Admin Credentials
 
