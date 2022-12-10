@@ -16,3 +16,5 @@ type TransactionProductJoined struct {
 	Product
 	TransactionHistory
 }
+
+type TransactionHistories []*TransactionProductJoined

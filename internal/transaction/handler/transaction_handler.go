@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -30,6 +31,7 @@ func NewTransactionHandler(r *gin.RouterGroup, ts transaction.TransactionService
 	transactionRoute := delivery.r.Group("/transactions", middleware.AuthMiddleware())
 	{
 		transactionRoute.Handle(http.MethodPost, "", delivery.doTransaction)
+		transactionRoute.Handle(http.MethodGet, "/my-transactions", delivery.viewMyTransaction)
 	}
 	return transactionRoute
 }
@@ -57,4 +59,28 @@ func (t *transactionHandler) doTransaction(c *gin.Context) {
 
 	response := utils.NewSuccessResponseWriter(c.Writer, constants.TransactionSuccess, http.StatusCreated, transactionResponse)
 	c.JSON(http.StatusCreated, response)
+}
+
+func (t *transactionHandler) viewMyTransaction(c *gin.Context) {
+	userLoginData := c.MustGet("userData").(jwt.MapClaims)
+	userID := uint64(userLoginData["userId"].(float64))
+	role, _ := userLoginData["userRole"].(string)
+
+	if strings.EqualFold(constants.CustomerRole, role) {
+		errCustomer := errors.ErrOnlyCustomer
+		t.logger.Sugar().Errorf("[viewMyTransaction] only customer can access", zap.Error(errCustomer))
+		errResponse := utils.NewErrorResponse(c.Writer, errCustomer)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+	myTransactions, errMyTransaction := t.ts.ViewMyTransaction(c, userID)
+	if errMyTransaction != nil {
+		t.logger.Sugar().Errorf("[viewMyTransaction] failed to view my transaction", zap.Error(errMyTransaction))
+		errResponse := utils.NewErrorResponse(c.Writer, errMyTransaction)
+		c.JSON(errResponse.Code, errResponse)
+		return
+	}
+
+	response := utils.NewSuccessResponseWriter(c.Writer, constants.ViewMyTransaction, http.StatusOK, myTransactions)
+	c.JSON(http.StatusOK, response)
 }
