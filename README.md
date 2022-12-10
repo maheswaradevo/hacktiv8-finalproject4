@@ -6,8 +6,8 @@ This is repository for Hacktiv8 Final Project 4 assignment. Already deployed on 
 
 ## Admin Credentials
 
-- Email:
-- Password:
+- Email: admin@gmail.com
+- Password: admintokobelanja
 
 ## How To Run
 
